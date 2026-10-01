@@ -172,8 +172,8 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
-    <!-- Hidden YouTube iframe container -->
-    <div class="hidden">
+    <!-- Offscreen YouTube iframe container (must NOT be display:none, otherwise browser blocks audio) -->
+    <div style="position: fixed; bottom: -300px; right: -300px; width: 200px; height: 200px; opacity: 0.001; pointer-events: none; z-index: -999;">
         <div id="yt-player"></div>
     </div>
 
@@ -392,10 +392,15 @@
         // YouTube API Initialization
         window.onYouTubeIframeAPIReady = function() {
             ytPlayer = new YT.Player('yt-player', {
-                height: '0',
-                width: '0',
+                height: '200',
+                width: '200',
                 videoId: '',
-                playerVars: { 'autoplay': 0, 'controls': 0 },
+                playerVars: { 
+                    'autoplay': 1, 
+                    'controls': 0,
+                    'playsinline': 1,
+                    'enablejsapi': 1
+                },
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -426,9 +431,10 @@
         }
 
         function extractVideoID(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            if (!url) return null;
+            const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
             const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            return (match && match[1]) ? match[1] : (url.length === 11 ? url : null);
         }
 
         function startYTProgress() {
@@ -474,15 +480,12 @@
         // Play/Pause Controller
         playPauseBtn.addEventListener('click', () => {
             if (activePlayerType === 'youtube') {
-                if (!ytPlayerReady) return;
-                if (isPlaying) {
+                if (!ytPlayerReady || !ytPlayer) return;
+                const state = (typeof ytPlayer.getPlayerState === 'function') ? ytPlayer.getPlayerState() : -1;
+                if (state === YT.PlayerState.PLAYING) {
                     ytPlayer.pauseVideo();
                 } else {
-                    if (ytPlayer.getPlayerState() === -1 || ytPlayer.getPlayerState() === 5) {
-                        playTrack(currentTrackId);
-                    } else {
-                        ytPlayer.playVideo();
-                    }
+                    ytPlayer.playVideo();
                 }
             } else {
                 if (audio.src) {
@@ -659,14 +662,33 @@
                 if (track.isYoutube && track.ytUrl) {
                     activePlayerType = 'youtube';
                     audio.pause();
+                    audio.currentTime = 0;
                     
                     const videoId = extractVideoID(track.ytUrl);
-                    if (ytPlayerReady && videoId) {
-                        ytPlayer.loadVideoById(videoId);
+                    if (videoId) {
+                        const startPlay = () => {
+                            if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+                                ytPlayer.loadVideoById(videoId);
+                                ytPlayer.playVideo();
+                            }
+                        };
+                        
+                        if (ytPlayerReady) {
+                            startPlay();
+                        } else {
+                            const timer = setInterval(() => {
+                                if (ytPlayerReady) {
+                                    clearInterval(timer);
+                                    startPlay();
+                                }
+                            }, 200);
+                        }
                     }
                 } else {
                     activePlayerType = 'html5';
-                    if (ytPlayerReady) ytPlayer.pauseVideo();
+                    if (ytPlayerReady && typeof ytPlayer.pauseVideo === 'function') {
+                        ytPlayer.pauseVideo();
+                    }
                     stopYTProgress();
                     
                     audio.src = track.url;
