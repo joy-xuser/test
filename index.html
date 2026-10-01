@@ -1,25 +1,460 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SonicStream - Ultra Fast Ad-Free YouTube Audio</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              400: '#818cf8',
-              500: '#6366f1',
-              accent: '#06b6d4',
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UltraFast YT Audio Player</title>
+    <!-- Google Fonts & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border: #30363d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .player-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: #090d13;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text-main);
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-fetch {
+            background: var(--primary);
+            color: #052e16;
+            border: none;
+            border-radius: 12px;
+            padding: 0 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-fetch:hover {
+            background: var(--primary-hover);
+        }
+
+        .thumbnail-container {
+            width: 100%;
+            height: 220px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #090d13;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+
+        .thumbnail-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .placeholder-icon {
+            color: var(--text-muted);
+        }
+
+        .track-info {
+            text-align: center;
+        }
+
+        .track-title {
+            font-size: 16px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .track-author {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            font-size: 12px;
+            text-align: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #21262d;
+            color: var(--text-muted);
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #30363d;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, color 0.2s;
+        }
+
+        .control-btn:hover {
+            color: var(--primary);
+        }
+
+        .play-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #052e16;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .play-btn:hover {
+            background: var(--primary-hover);
+            color: #052e16;
+            transform: scale(1.05);
+        }
+
+        .extra-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        .volume-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-card">
+    <div class="input-group">
+        <input type="text" id="videoUrl" placeholder="YouTube লিংক দিন..." value="https://www.youtube.com/watch?v=jfKfPfyJRdk">
+        <button class="btn-fetch" id="fetchBtn" title="Play">
+            <i data-lucide="arrow-right"></i>
+        </button>
+    </div>
+
+    <div class="thumbnail-container">
+        <img id="thumbImg" alt="Thumbnail">
+        <div id="thumbPlaceholder" class="placeholder-icon">
+            <i data-lucide="music" size="48"></i>
+        </div>
+    </div>
+
+    <div class="track-info">
+        <div class="track-title" id="trackTitle">কোনো গান সিলেক্ট করা নেই</div>
+        <div class="track-author" id="trackAuthor">রেডি</div>
+    </div>
+
+    <div class="status-badge" id="statusBadge">YouTube লিংক দিয়ে অ্যারো বাটনে চাপুন</div>
+
+    <div class="progress-section">
+        <input type="range" id="progressBar" value="0" min="0" max="100">
+        <div class="time-row">
+            <span id="currentTime">00:00</span>
+            <span id="durationTime">00:00</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" id="rewindBtn" title="-10s">
+            <i data-lucide="rotate-ccw"></i>
+        </button>
+        <button class="control-btn play-btn" id="playPauseBtn">
+            <i data-lucide="play" id="playIcon"></i>
+        </button>
+        <button class="control-btn" id="forwardBtn" title="+10s">
+            <i data-lucide="rotate-cw"></i>
+        </button>
+    </div>
+
+    <div class="extra-controls">
+        <div class="volume-box">
+            <i data-lucide="volume-2" size="18" id="volIcon"></i>
+            <input type="range" id="volumeBar" min="0" max="1" step="0.05" value="1">
+        </div>
+        <button class="control-btn" id="speedBtn" style="font-weight: 700; font-size: 13px;">1.0x</button>
+    </div>
+</div>
+
+<!-- Native Audio Player (Hidden) -->
+<audio id="nativeAudio" preload="auto"></audio>
+
+<script>
+    lucide.createIcons();
+
+    // Fast Invidious & Piped public instances (Auto-fallback)
+    const INSTANCES = [
+        "https://invidious.nerdvpn.de",
+        "https://inv.tux.pizza",
+        "https://invidious.drgns.space",
+        "https://pipedapi.kavin.rocks",
+        "https://api.piped.privacy.com.de"
+    ];
+
+    const audio = document.getElementById('nativeAudio');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const urlInput = document.getElementById('videoUrl');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeText = document.getElementById('currentTime');
+    const durationTimeText = document.getElementById('durationTime');
+    const statusBadge = document.getElementById('statusBadge');
+    const thumbImg = document.getElementById('thumbImg');
+    const thumbPlaceholder = document.getElementById('thumbPlaceholder');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackAuthor = document.getElementById('trackAuthor');
+    const volumeBar = document.getElementById('volumeBar');
+    const rewindBtn = document.getElementById('rewindBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
+    const speedBtn = document.getElementById('speedBtn');
+
+    let currentSpeed = 1.0;
+
+    function extractVideoID(url) {
+        const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
+        const match = url.match(regExp);
+        return (match && match[1]) ? match[1] : (url.length === 11 ? url : null);
+    }
+
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return "00:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Auto Fetch with Fallback Engine
+    async function loadAudio(videoId) {
+        statusBadge.textContent = "⚡ অডিও স্ট্রিম খোঁজা হচ্ছে...";
+        thumbImg.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        thumbImg.style.display = 'block';
+        thumbPlaceholder.style.display = 'none';
+
+        let audioStreamUrl = null;
+
+        for (let i = 0; i < INSTANCES.length; i++) {
+            const host = INSTANCES[i];
+            try {
+                statusBadge.textContent = `সার্ভার সংযোগ করা হচ্ছে (${i + 1}/${INSTANCES.length})...`;
+                
+                // Invidious API
+                if (host.includes('inv')) {
+                    const res = await fetch(`${host}/api/v1/videos/${videoId}?fields=title,author,adaptiveFormats`, { signal: AbortSignal.timeout(4000) });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    
+                    trackTitle.textContent = data.title || "Unknown Title";
+                    trackAuthor.textContent = data.author || "YouTube Audio";
+
+                    // Best audio stream filter
+                    const audioFormats = data.adaptiveFormats.filter(f => f.type && f.type.startsWith('audio/'));
+                    if (audioFormats.length > 0) {
+                        // High quality m4a/opus
+                        audioStreamUrl = audioFormats[audioFormats.length - 1].url;
+                        break;
+                    }
+                } 
+                // Piped API
+                else {
+                    const res = await fetch(`${host}/streams/${videoId}`, { signal: AbortSignal.timeout(4000) });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+
+                    trackTitle.textContent = data.title || "Unknown Title";
+                    trackAuthor.textContent = data.uploader || "YouTube Audio";
+
+                    if (data.audioStreams && data.audioStreams.length > 0) {
+                        audioStreamUrl = data.audioStreams[0].url;
+                        break;
+                    }
+                }
+            } catch (err) {
+                console.warn(`Instance failed: ${host}`, err);
             }
-          },
-          animation: {
-            'spin-slow': 'spin 10s linear infinite',
-            'pulse-fast': 'pulse 1s
+        }
+
+        if (audioStreamUrl) {
+            statusBadge.textContent = "🟢 দ্রুত অডিও কানেক্ট হয়েছে (বিজ্ঞাপনহীন)";
+            audio.src = audioStreamUrl;
+            audio.play().then(() => {
+                updatePlayState(true);
+            }).catch(e => {
+                statusBadge.textContent = "প্লে বাটনে ক্লিক করুন";
+            });
+        } else {
+            statusBadge.textContent = "❌ অডিও পাওয়া যায়নি! অন্য লিঙ্ক চেষ্টা করুন।";
+        }
+    }
+
+    function updatePlayState(isPlaying) {
+        if (isPlaying) {
+            playIcon.setAttribute('data-lucide', 'pause');
+        } else {
+            playIcon.setAttribute('data-lucide', 'play');
+        }
+        lucide.createIcons();
+    }
+
+    fetchBtn.addEventListener('click', () => {
+        const id = extractVideoID(urlInput.value.trim());
+        if (id) {
+            loadAudio(id);
+        } else {
+            alert('সঠিক YouTube লিঙ্ক দিন');
+        }
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+        if (!audio.src) return;
+        if (audio.paused) {
+            audio.play();
+            updatePlayState(true);
+        } else {
+            audio.pause();
+            updatePlayState(false);
+        }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+        if (!isNaN(audio.duration)) {
+            progressBar.value = (audio.currentTime / audio.duration) * 100;
+            currentTimeText.textContent = formatTime(audio.currentTime);
+            durationTimeText.textContent = formatTime(audio.duration);
+        }
+    });
+
+    progressBar.addEventListener('input', () => {
+        if (!isNaN(audio.duration)) {
+            audio.currentTime = (progressBar.value / 100) * audio.duration;
+        }
+    });
+
+    volumeBar.addEventListener('input', (e) => {
+        audio.volume = e.target.value;
+    });
+
+    rewindBtn.addEventListener('click', () => {
+        audio.currentTime = Math.max(0, audio.currentTime - 10);
+    });
+
+    forwardBtn.addEventListener('click', () => {
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+    });
+
+    speedBtn.addEventListener('click', () => {
+        const speeds = [1.0, 1.25, 1.5, 2.0];
+        let nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
+        currentSpeed = speeds[nextIndex];
+        audio.playbackRate = currentSpeed;
+        speedBtn.textContent = `${currentSpeed}x`;
+    });
+</script>
+</body>
+</html>
