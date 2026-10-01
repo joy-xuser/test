@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agomoni Sur - Durga Puja Special</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
@@ -13,15 +15,15 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #111; /* Fallback */
+            background-color: #0c0703;
             color: #fff;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            /* Using a placeholder gradient for the beautiful sunset background, 
-               ideally this would be a high-res image */
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('572df7ce-e87d-4080-935f-ee9d76715ad9.jpg') no-repeat center center fixed;
+            background: linear-gradient(rgba(10, 5, 2, 0.72), rgba(15, 6, 2, 0.85)), 
+                        radial-gradient(circle at 20% 30%, rgba(255, 140, 0, 0.18) 0%, transparent 60%),
+                        url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -30,18 +32,16 @@
         }
 
         .golden-glass {
-            background: linear-gradient(135deg, rgba(60, 30, 10, 0.65) 0%, rgba(10, 5, 0, 0.85) 100%);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            /* Golden rim lighting */
-            border: 1px solid rgba(255, 170, 60, 0.25);
-            border-top: 1px solid rgba(255, 210, 100, 0.5);
-            border-left: 1px solid rgba(255, 190, 80, 0.4);
-            /* Outer golden glow + inner highlight */
+            background: linear-gradient(135deg, rgba(60, 30, 10, 0.75) 0%, rgba(15, 8, 2, 0.9) 100%);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 170, 60, 0.28);
+            border-top: 1px solid rgba(255, 210, 100, 0.55);
+            border-left: 1px solid rgba(255, 190, 80, 0.45);
             box-shadow: 
-                0 15px 35px rgba(0, 0, 0, 0.7), 
-                0 0 35px rgba(249, 115, 22, 0.25), 
-                inset 0 1px 15px rgba(255, 180, 80, 0.15);
+                0 15px 35px rgba(0, 0, 0, 0.75), 
+                0 0 35px rgba(249, 115, 22, 0.22), 
+                inset 0 1px 15px rgba(255, 180, 80, 0.18);
         }
 
         .glass-header {
@@ -78,7 +78,7 @@
             border-radius: 50%;
             background: #ff8c00;
             cursor: pointer;
-            margin-top: -4px; /* Adjust based on track height */
+            margin-top: -4px;
             box-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
         }
 
@@ -90,13 +90,12 @@
             border-radius: 2px;
         }
 
-        /* Progress fill effect requires JS or complex CSS tricks, keeping it simple here */
         .progress-bar-container {
             position: relative;
             width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
             cursor: pointer;
         }
 
@@ -105,21 +104,21 @@
             top: 0;
             left: 0;
             height: 100%;
-            background: #f97316; /* Orange-500 */
-            border-radius: 2px;
-            width: 30%; /* Default width */
+            background: linear-gradient(90deg, #FF8C00, #FFB75E);
+            border-radius: 4px;
+            width: 0%;
         }
         
         .progress-bar-thumb {
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%);
-            width: 12px;
-            height: 12px;
-            background: #fbcfe8; /* Light pinkish */
+            width: 13px;
+            height: 13px;
+            background: #FFE4B5;
             border-radius: 50%;
-            left: 30%; /* Match fill width */
-            box-shadow: 0 0 8px rgba(249, 115, 22, 0.8);
+            left: 0%;
+            box-shadow: 0 0 8px rgba(255, 140, 0, 0.8);
         }
 
         .playlist-item {
@@ -131,7 +130,7 @@
         }
 
         .playlist-item.active {
-            background: linear-gradient(90deg, rgba(255, 140, 0, 0.2) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(255, 140, 0, 0.25) 0%, transparent 100%);
             border-left: 3px solid #f97316;
         }
 
@@ -157,7 +156,7 @@
 
         @keyframes blink {
             0% { opacity: 1; }
-            50% { opacity: 0.4; }
+            50% { opacity: 0.35; }
             100% { opacity: 1; }
         }
 
@@ -168,45 +167,36 @@
             position: relative;
             z-index: 10;
         }
-        
-        .center-graphic {
-            position: absolute;
-            top: 50%;
-            left: 35%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 5;
-            pointer-events: none; /* Let clicks pass through if needed */
-        }
-
     </style>
+    <!-- YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
+    <!-- Hidden YouTube iframe container -->
     <div class="hidden">
         <div id="yt-player"></div>
     </div>
 
     <!-- Overlay for better text readability -->
-    <div class="absolute inset-0 bg-black/20 z-0"></div>
+    <div class="absolute inset-0 bg-black/25 z-0 pointer-events-none"></div>
 
     <div class="main-content-wrapper z-10 w-full h-full p-4 md:p-6 lg:p-8 flex flex-col justify-between">
         
         <!-- Middle Section: Playlist on the right -->
-        <div class="flex-grow flex items-center justify-end w-full mt-8 lg:mt-0 relative z-20">
+        <div class="flex-grow flex items-center justify-end w-full mt-4 lg:mt-0 relative z-20">
             
             <!-- Playlist Container -->
             <div class="golden-glass rounded-[1.5rem] w-full lg:w-[415px] flex flex-col h-[60vh] max-h-[460px] overflow-hidden mr-0 lg:mr-8 transition-all duration-300 shadow-2xl relative" id="playlist-container">
                 
                 <!-- Category Drawer (Slide-in Menu) -->
-                <div id="playlist-category-drawer" class="absolute top-0 left-0 w-[65%] h-full bg-gradient-to-br from-[#3c1e0a]/98 to-[#1a0a00]/98 backdrop-blur-2xl border-r border-[#ffb450]/20 transform -translate-x-full transition-transform duration-300 ease-out z-30 flex flex-col shadow-[15px_0_30px_rgba(0,0,0,0.6)]">
+                <div id="playlist-category-drawer" class="absolute top-0 left-0 w-[68%] h-full bg-gradient-to-br from-[#3c1e0a]/98 to-[#1a0a00]/98 backdrop-blur-2xl border-r border-[#ffb450]/20 transform -translate-x-full transition-transform duration-300 ease-out z-30 flex flex-col shadow-[15px_0_30px_rgba(0,0,0,0.6)]">
                     <div class="px-5 py-4 flex items-center justify-between border-b border-white/10 mt-2">
                         <h4 class="font-bold text-[13px] tracking-widest text-[#ffb866]">CATEGORIES</h4>
                         <button id="close-category-drawer" class="text-gray-400 hover:text-white w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div class="flex-grow overflow-y-auto px-3 py-2 space-y-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    <div class="flex-grow overflow-y-auto px-3 py-2 space-y-1">
                         <button class="w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group" onclick="selectCategory('Mahalaya')">
                             Mahalaya <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
                         </button>
@@ -246,7 +236,7 @@
 
                 <!-- Playlist Items -->
                 <div class="overflow-y-auto flex-grow px-3 pb-3 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent" id="playlist-items">
-                    <!-- Tracks will be dynamically injected here via JavaScript -->
+                    <!-- Dynamic Tracks injected here -->
                 </div>
             </div>
         </div>
@@ -259,7 +249,13 @@
                 
                 <!-- Left: Album Art & Track Info (Including Progress) -->
                 <div class="flex items-center gap-5 w-full lg:w-[60%] flex-shrink-0 min-w-0 pl-1">
-                    <img src="572df7ce-e87d-4080-935f-ee9d76715ad9.jpg" alt="Album Art" id="current-album-art" class="w-[90px] h-[90px] rounded-[1rem] object-cover shadow-lg border border-white/5 shrink-0 transition-all duration-300">
+                    <img 
+                        src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80" 
+                        alt="Album Art" 
+                        id="current-album-art" 
+                        class="w-[90px] h-[90px] rounded-[1rem] object-cover shadow-lg border border-white/10 shrink-0 transition-all duration-300"
+                        onerror="this.src='https://placehold.co/150x150/3c1e0a/ffb450?text=Music'"
+                    />
                     
                     <div class="flex flex-col justify-center w-full min-w-0 py-1">
                         <!-- LIVE Badge -->
@@ -275,11 +271,11 @@
                         <!-- Progress Bar & Timestamps -->
                         <div class="w-full relative">
                             <div class="progress-bar-container h-[5px] bg-white/10 rounded-full relative cursor-pointer w-full" id="progress-container">
-                                <div class="progress-bar-fill absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full" id="progress-fill" style="width: 33%;"></div>
-                                <div class="progress-bar-thumb absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#FFE4B5] rounded-full shadow-[0_0_8px_rgba(255,140,0,0.6)]" id="progress-thumb" style="left: 33%;"></div>
+                                <div class="progress-bar-fill absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full" id="progress-fill" style="width: 0%;"></div>
+                                <div class="progress-bar-thumb absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#FFE4B5] rounded-full shadow-[0_0_8px_rgba(255,140,0,0.6)]" id="progress-thumb" style="left: 0%;"></div>
                             </div>
                             <div class="flex justify-between items-center w-full mt-2 px-0.5">
-                                <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="current-time">02:18</span>
+                                <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="current-time">00:00</span>
                                 <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="total-time">06:45</span>
                             </div>
                         </div>
@@ -287,31 +283,35 @@
                 </div>
 
                 <!-- Center: Main Controls -->
-        <div class="flex items-center justify-center gap-5 shrink-0">
-            <button class="w-[42px] h-[42px] rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors shadow-inner" id="prev-btn">
-                <i class="fas fa-backward-step text-sm"></i>
-            </button>
-            <button class="w-[56px] h-[56px] rounded-full bg-gradient-to-b from-[#FFA751] to-[#E65C00] hover:scale-105 text-white flex items-center justify-center shadow-[0_4px_15px_rgba(230,92,0,0.3)] transition-transform" id="play-pause-btn">
-                <i class="fas fa-play text-xl"></i>
-            </button>
-            <button class="w-[42px] h-[42px] rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors shadow-inner" id="next-btn">
-                <i class="fas fa-forward-step text-sm"></i>
-            </button>
-        </div>
+                <div class="flex items-center justify-center gap-5 shrink-0">
+                    <button class="w-[42px] h-[42px] rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors shadow-inner" id="prev-btn" title="Previous">
+                        <i class="fas fa-backward-step text-sm"></i>
+                    </button>
+                    <button class="w-[56px] h-[56px] rounded-full bg-gradient-to-b from-[#FFA751] to-[#E65C00] hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-[0_4px_15px_rgba(230,92,0,0.3)] transition-transform" id="play-pause-btn" title="Play / Pause">
+                        <i class="fas fa-play text-xl ml-0.5"></i>
+                    </button>
+                    <button class="w-[42px] h-[42px] rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors shadow-inner" id="next-btn" title="Next">
+                        <i class="fas fa-forward-step text-sm"></i>
+                    </button>
+                </div>
 
-        <!-- Right: Volume & Expand -->
-        <div class="flex items-center justify-end gap-3 shrink-0 pl-4 w-[160px]">
-            <i class="fas fa-volume-up text-gray-300 text-[15px]" id="mute-icon"></i>
-            <div class="w-[80px] h-[4px] bg-white/20 rounded-full relative cursor-pointer ml-1" id="volume-container">
-                <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full w-[100%]" id="volume-fill"></div>
-                <div class="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] bg-[#FFE4B5] rounded-full left-[100%] shadow-[0_0_5px_rgba(255,140,0,0.6)]" id="volume-thumb"></div>
+                <!-- Right: Volume & Expand -->
+                <div class="flex items-center justify-end gap-3 shrink-0 pl-4 w-[160px]">
+                    <i class="fas fa-volume-up text-gray-300 text-[15px] cursor-pointer hover:text-white transition-colors" id="mute-icon" title="Mute/Unmute"></i>
+                    <div class="w-[80px] h-[4px] bg-white/20 rounded-full relative cursor-pointer ml-1" id="volume-container">
+                        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full w-[100%]" id="volume-fill"></div>
+                        <div class="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] bg-[#FFE4B5] rounded-full left-[100%] shadow-[0_0_5px_rgba(255,140,0,0.6)]" id="volume-thumb"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
+
     </div>
 
     <script>
         const allTracks = [
-            { id: 't1', title: "Chandipath (Recitation)", artist: "B. K. Bhadra", duration: "06:45", image: "572df7ce-e87d-4080-935f-ee9d76715ad9.jpg", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+            { id: 't1', title: "Chandipath (Recitation)", artist: "B. K. Bhadra", duration: "06:45", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
             { id: 't2', title: "Dhak — Solo Instrumental", artist: "P. Dhak", duration: "03:20", image: "https://placehold.co/150x150/3c1e0a/ffb450?text=Dhak", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
             { id: 't3', title: "Ashtami Aarti with Dhak", artist: "Live Recording", duration: "05:15", image: "https://placehold.co/150x150/521313/ffffff?text=Aarti", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
             { id: 't4', title: "Conch Shell (Shankha)", artist: "Ambience", duration: "01:30", image: "https://placehold.co/150x150/1a0a00/ffb450?text=Shankha", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
@@ -339,16 +339,16 @@
                     artist: "Monali Thakur",
                     duration: "04:12",
                     isYoutube: true,
-                    ytUrl: "https://youtu.be/8l-y8_2zXoA", // Example real link
+                    ytUrl: "https://youtu.be/8l-y8_2zXoA",
                     image: "https://placehold.co/150x150/3c1e0a/ffb450?text=Dugga+Elo"
                 },
-                 {
+                {
                     id: 'yt_shasthi_3',
                     title: "Bolo Dugga Maiki",
                     artist: "Arijit Singh",
                     duration: "03:45",
                     isYoutube: true,
-                    ytUrl: "https://youtu.be/L8J6xG16T70", // Example real link
+                    ytUrl: "https://youtu.be/L8J6xG16T70",
                     image: "https://placehold.co/150x150/521313/ffffff?text=Dugga+Maiki"
                 }
             ],
@@ -359,12 +359,11 @@
             'All Tracks': allTracks
         };
 
-        // --- REAL AUDIO SETUP (HTML5 + YOUTUBE) ---
         const audio = new Audio();
         
         let ytPlayer;
         let ytPlayerReady = false;
-        let activePlayerType = 'html5'; // 'html5' or 'youtube'
+        let activePlayerType = 'html5';
         let ytProgressInterval;
 
         let currentPlaylistName = 'All Tracks';
@@ -390,8 +389,8 @@
         const volumeThumb = document.getElementById('volume-thumb');
         const muteIcon = document.getElementById('mute-icon');
 
-        // --- YOUTUBE API INITIALIZATION ---
-        function onYouTubeIframeAPIReady() {
+        // YouTube API Initialization
+        window.onYouTubeIframeAPIReady = function() {
             ytPlayer = new YT.Player('yt-player', {
                 height: '0',
                 width: '0',
@@ -402,7 +401,7 @@
                     'onStateChange': onPlayerStateChange
                 }
             });
-        }
+        };
 
         function onPlayerReady(event) {
             ytPlayerReady = true;
@@ -415,7 +414,6 @@
                 isPlaying = true;
                 setPlayIcon(true);
                 startYTProgress();
-                // Get accurate duration once playing
                 totalTimeDisplay.textContent = formatTime(ytPlayer.getDuration());
             } else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.BUFFERING) {
                 isPlaying = false;
@@ -473,16 +471,15 @@
             progressThumb.style.left = `${percentage}%`;
         }
 
-        // Play/Pause Logic (Routes to HTML5 or YouTube)
+        // Play/Pause Controller
         playPauseBtn.addEventListener('click', () => {
             if (activePlayerType === 'youtube') {
                 if (!ytPlayerReady) return;
                 if (isPlaying) {
                     ytPlayer.pauseVideo();
                 } else {
-                    // Check if it's currently loaded
-                    if(ytPlayer.getPlayerState() === -1 || ytPlayer.getPlayerState() === 5) {
-                        playTrack(currentTrackId); // force load
+                    if (ytPlayer.getPlayerState() === -1 || ytPlayer.getPlayerState() === 5) {
+                        playTrack(currentTrackId);
                     } else {
                         ytPlayer.playVideo();
                     }
@@ -500,7 +497,7 @@
             }
         });
 
-        // HTML5 Audio Event Listeners
+        // HTML5 Audio Events
         audio.addEventListener('play', () => {
             if(activePlayerType !== 'html5') return;
             isPlaying = true;
@@ -534,7 +531,7 @@
             if (activePlayerType === 'html5') playNextTrack();
         });
 
-        // Progress Bar Interaction (Seek)
+        // Seek Control
         progressContainer.addEventListener('click', (e) => {
             const rect = progressContainer.getBoundingClientRect();
             const pos = (e.clientX - rect.left) / rect.width;
@@ -547,7 +544,7 @@
             }
         });
 
-        // Volume Interaction
+        // Volume Controls
         volumeContainer.addEventListener('click', (e) => {
             const rect = volumeContainer.getBoundingClientRect();
             let pos = (e.clientX - rect.left) / rect.width;
@@ -587,13 +584,12 @@
             }
         });
 
-        // Prev/Next Logic
         function playNextTrack() {
             const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
             if (currentIndex !== -1 && currentIndex < tracks.length - 1) {
                 playTrack(tracks[currentIndex + 1].id);
             } else {
-                playTrack(tracks[0].id); // Loop back to start
+                playTrack(tracks[0].id);
             }
         }
 
@@ -638,15 +634,12 @@
             });
             
             document.getElementById('playlist-main-title').textContent = `${currentPlaylistName.toUpperCase()} (${tracks.length})`;
-            
             updateActiveTrackUI();
         }
 
-        // --- MASTER PLAY TRACK FUNCTION ---
         window.playTrack = function(id) {
             let track = tracks.find(t => t.id === id);
             if (!track) {
-                // Search globally if changed playlist
                 for (const listName in playlistsData) {
                     const found = playlistsData[listName].find(t => t.id === id);
                     if(found) { track = found; break; }
@@ -656,29 +649,24 @@
             if (track) {
                 currentTrackId = track.id;
                 
-                // Reset UI
                 updateProgressBar(0);
                 currentTimeDisplay.textContent = "00:00";
                 totalTimeDisplay.textContent = track.duration || "00:00";
                 trackTitleDisplay.textContent = track.title;
                 trackArtistDisplay.textContent = track.artist;
-                currentAlbumArt.src = track.image || '572df7ce-e87d-4080-935f-ee9d76715ad9.jpg';
+                currentAlbumArt.src = track.image || 'https://placehold.co/150x150/3c1e0a/ffb450?text=Music';
                 
-                // Determine Source
                 if (track.isYoutube && track.ytUrl) {
                     activePlayerType = 'youtube';
-                    audio.pause(); // Stop HTML5 audio
+                    audio.pause();
                     
                     const videoId = extractVideoID(track.ytUrl);
                     if (ytPlayerReady && videoId) {
                         ytPlayer.loadVideoById(videoId);
-                    } else if (!ytPlayerReady) {
-                        console.warn("YouTube player not ready yet.");
-                        // It will auto play when user clicks play button if loaded
                     }
                 } else {
                     activePlayerType = 'html5';
-                    if (ytPlayerReady) ytPlayer.pauseVideo(); // Stop YouTube audio
+                    if (ytPlayerReady) ytPlayer.pauseVideo();
                     stopYTProgress();
                     
                     audio.src = track.url;
@@ -689,7 +677,6 @@
             }
         };
 
-        // Update Playlist UI Equalizer
         function updateActiveTrackUI() {
             document.querySelectorAll('.playlist-item').forEach((item, index) => {
                 const track = tracks[index];
@@ -729,7 +716,7 @@
             });
         }
 
-        // Playlist Toggle & Drawer Logic
+        // Drawer and Toggle controls
         const toggleBtn = document.getElementById('toggle-playlist');
         const playlistItems = document.getElementById('playlist-items');
         const playlistIcon = document.getElementById('playlist-icon');
@@ -740,7 +727,6 @@
         const categoryDrawer = document.getElementById('playlist-category-drawer');
         const openCategoryBtn = document.getElementById('open-category-drawer');
         const closeCategoryBtn = document.getElementById('close-category-drawer');
-        const playlistMainTitle = document.getElementById('playlist-main-title');
 
         openCategoryBtn.addEventListener('click', () => {
             categoryDrawer.classList.remove('-translate-x-full');
@@ -772,14 +758,13 @@
             }
         });
 
-        // Initialize UI
+        // Initial setup
         const initialTrack = allTracks.find(t => t.id === currentTrackId);
         trackTitleDisplay.textContent = initialTrack.title;
         trackArtistDisplay.textContent = initialTrack.artist;
         audio.src = initialTrack.url;
         audio.volume = 1; 
         renderPlaylist();
-
     </script>
 </body>
 </html>
