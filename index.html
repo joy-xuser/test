@@ -1,460 +1,678 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UltraFast YT Audio Player</title>
-    <!-- Google Fonts & Lucide Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --primary: #10b981;
-            --primary-hover: #059669;
-            --text-main: #f0f6fc;
-            --text-muted: #8b949e;
-            --border: #30363d;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundStream - YouTube Audio Player</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#6366f1',
+              600: '#4f46e5',
+              accent: '#ec4899',
+            }
+          },
+          animation: {
+            'spin-slow': 'spin 12s linear infinite',
+            'pulse-glow': 'pulseGlow 2s ease-in-out infinite'
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
+              '50%': { opacity: '1', transform: 'scale(1.05)' },
+            }
+          }
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .player-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            width: 100%;
-            max-width: 440px;
-            padding: 24px;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            background: #090d13;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 14px;
-            color: var(--text-main);
-            outline: none;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--primary);
-        }
-
-        .btn-fetch {
-            background: var(--primary);
-            color: #052e16;
-            border: none;
-            border-radius: 12px;
-            padding: 0 16px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .btn-fetch:hover {
-            background: var(--primary-hover);
-        }
-
-        .thumbnail-container {
-            width: 100%;
-            height: 220px;
-            border-radius: 16px;
-            overflow: hidden;
-            background: #090d13;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border);
-        }
-
-        .thumbnail-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-
-        .placeholder-icon {
-            color: var(--text-muted);
-        }
-
-        .track-info {
-            text-align: center;
-        }
-
-        .track-title {
-            font-size: 16px;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-        }
-
-        .track-author {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .status-badge {
-            font-size: 12px;
-            text-align: center;
-            padding: 6px 12px;
-            border-radius: 20px;
-            background: #21262d;
-            color: var(--text-muted);
-            min-height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .progress-section {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .time-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #30363d;
-            outline: none;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-        }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 24px;
-        }
-
-        .control-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s, color 0.2s;
-        }
-
-        .control-btn:hover {
-            color: var(--primary);
-        }
-
-        .play-btn {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #052e16;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .play-btn:hover {
-            background: var(--primary-hover);
-            color: #052e16;
-            transform: scale(1.05);
-        }
-
-        .extra-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
-        }
-
-        .volume-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 120px;
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #111827;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+    /* Visualizer Bar Animations */
+    .bar {
+      transition: height 0.15s ease;
+    }
+    /* Range input styling */
+    input[type=range] {
+      accent-color: #6366f1;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-brand-500 selection:text-white antialiased">
 
-<div class="player-card">
-    <div class="input-group">
-        <input type="text" id="videoUrl" placeholder="YouTube লিংক দিন..." value="https://www.youtube.com/watch?v=jfKfPfyJRdk">
-        <button class="btn-fetch" id="fetchBtn" title="Play">
-            <i data-lucide="arrow-right"></i>
-        </button>
-    </div>
+  <!-- Hidden YouTube iframe container (Audio-only simulation) -->
+  <div id="yt-player-container" class="fixed -bottom-[9999px] -left-[9999px] pointer-events-none opacity-0">
+    <div id="youtube-player"></div>
+  </div>
 
-    <div class="thumbnail-container">
-        <img id="thumbImg" alt="Thumbnail">
-        <div id="thumbPlaceholder" class="placeholder-icon">
-            <i data-lucide="music" size="48"></i>
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+          <i class="fa-solid fa-headphones text-lg text-white"></i>
         </div>
-    </div>
-
-    <div class="track-info">
-        <div class="track-title" id="trackTitle">কোনো গান সিলেক্ট করা নেই</div>
-        <div class="track-author" id="trackAuthor">রেডি</div>
-    </div>
-
-    <div class="status-badge" id="statusBadge">YouTube লিংক দিয়ে অ্যারো বাটনে চাপুন</div>
-
-    <div class="progress-section">
-        <input type="range" id="progressBar" value="0" min="0" max="100">
-        <div class="time-row">
-            <span id="currentTime">00:00</span>
-            <span id="durationTime">00:00</span>
+        <div>
+          <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white to-pink-300">
+            SoundStream
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium leading-none">YouTube Audio Player</p>
         </div>
-    </div>
+      </div>
 
-    <div class="controls">
-        <button class="control-btn" id="rewindBtn" title="-10s">
-            <i data-lucide="rotate-ccw"></i>
-        </button>
-        <button class="control-btn play-btn" id="playPauseBtn">
-            <i data-lucide="play" id="playIcon"></i>
-        </button>
-        <button class="control-btn" id="forwardBtn" title="+10s">
-            <i data-lucide="rotate-cw"></i>
-        </button>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          GitHub Live Ready
+        </span>
+      </div>
     </div>
+  </header>
 
-    <div class="extra-controls">
-        <div class="volume-box">
-            <i data-lucide="volume-2" size="18" id="volIcon"></i>
-            <input type="range" id="volumeBar" min="0" max="1" step="0.05" value="1">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+
+    <!-- Top URL Input & Quick Load Bar -->
+    <section class="bg-slate-900/70 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-black/40">
+      <form id="url-form" class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-brands fa-youtube text-red-500 text-lg"></i>
+          </div>
+          <input 
+            type="text" 
+            id="youtube-url-input" 
+            placeholder="YouTube লিঙ্ক পেস্ট করুন (যেমন: https://www.youtube.com/watch?v=...)" 
+            class="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-700/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-100 placeholder-slate-500 transition"
+            required
+          />
         </div>
-        <button class="control-btn" id="speedBtn" style="font-weight: 700; font-size: 13px;">1.0x</button>
+        <button 
+          type="submit" 
+          id="load-btn"
+          class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-[0.98] font-semibold text-sm rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 shrink-0"
+        >
+          <i class="fa-solid fa-play text-xs"></i>
+          <span>গান চালান</span>
+        </button>
+      </form>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+      
+      <!-- Left Column: Audio Player Center Stage -->
+      <section class="lg:col-span-7 bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-xl">
+        <!-- Background Ambient Glow -->
+        <div id="ambient-glow" class="absolute -top-24 -left-24 w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none transition-all duration-700"></div>
+        <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-pink-600/15 rounded-full blur-3xl pointer-events-none transition-all duration-700"></div>
+
+        <!-- Disc / Thumbnail Art -->
+        <div class="relative group my-4">
+          <div id="art-wrapper" class="w-48 h-48 sm:w-60 sm:h-60 rounded-full p-2.5 bg-gradient-to-br from-indigo-500/30 via-slate-800 to-pink-500/30 border border-slate-700 shadow-2xl relative flex items-center justify-center transition duration-500">
+            <!-- Center Hole Vinyl effect -->
+            <div class="absolute w-12 h-12 rounded-full bg-slate-950 border-4 border-slate-800 z-10 shadow-inner flex items-center justify-center">
+              <div class="w-3.5 h-3.5 rounded-full bg-indigo-500"></div>
+            </div>
+            <!-- Dynamic Album Thumbnail -->
+            <img 
+              id="album-art" 
+              src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80" 
+              alt="Track Artwork" 
+              class="w-full h-full object-cover rounded-full select-none shadow-md transition-all duration-500"
+              onerror="this.src='https://placehold.co/400x400/1e293b/94a3b8?text=Audio+Track'"
+            />
+          </div>
+        </div>
+
+        <!-- Metadata Information -->
+        <div class="text-center w-full max-w-md mt-4 mb-2">
+          <h2 id="track-title" class="text-xl sm:text-2xl font-bold truncate text-slate-100">
+            কোনো গান প্লে হচ্ছে না
+          </h2>
+          <p id="track-channel" class="text-sm text-slate-400 font-medium truncate mt-1">
+            ইউটিউব লিঙ্ক দিয়ে শুরু করুন অথবা নিচের গানগুলো বেছে নিন
+          </p>
+        </div>
+
+        <!-- Simulated Audio Waveform Visualizer -->
+        <div id="visualizer" class="flex items-end justify-center gap-1.5 h-12 w-full max-w-xs my-4 py-1">
+          <!-- 16 Visualizer Bars -->
+          <div class="bar w-1.5 bg-indigo-500 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-indigo-400 rounded-full h-3"></div>
+          <div class="bar w-1.5 bg-indigo-500 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-pink-500 rounded-full h-4"></div>
+          <div class="bar w-1.5 bg-pink-400 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-indigo-400 rounded-full h-5"></div>
+          <div class="bar w-1.5 bg-indigo-500 rounded-full h-3"></div>
+          <div class="bar w-1.5 bg-pink-500 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-indigo-500 rounded-full h-4"></div>
+          <div class="bar w-1.5 bg-indigo-400 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-pink-400 rounded-full h-6"></div>
+          <div class="bar w-1.5 bg-pink-500 rounded-full h-3"></div>
+          <div class="bar w-1.5 bg-indigo-400 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-indigo-500 rounded-full h-5"></div>
+          <div class="bar w-1.5 bg-pink-400 rounded-full h-2"></div>
+          <div class="bar w-1.5 bg-indigo-500 rounded-full h-3"></div>
+        </div>
+
+        <!-- Progress Bar and Timers -->
+        <div class="w-full max-w-lg mt-2">
+          <input 
+            type="range" 
+            id="seek-bar" 
+            min="0" 
+            max="100" 
+            value="0" 
+            class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer transition"
+          />
+          <div class="flex justify-between text-xs font-mono text-slate-400 mt-1.5">
+            <span id="current-time">0:00</span>
+            <span id="duration-time">0:00</span>
+          </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="flex items-center justify-center gap-5 sm:gap-7 mt-6">
+          <!-- Repeat -->
+          <button id="repeat-btn" class="text-slate-400 hover:text-white transition text-lg p-2" title="Repeat Mode">
+            <i class="fa-solid fa-repeat"></i>
+          </button>
+          
+          <!-- Prev -->
+          <button id="prev-btn" class="text-slate-300 hover:text-white transition text-xl p-2" title="Previous">
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+
+          <!-- Play / Pause Main Button -->
+          <button 
+            id="play-pause-btn" 
+            class="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:scale-105 active:scale-95 text-white flex items-center justify-center text-xl shadow-xl shadow-indigo-500/30 transition transform"
+            title="Play/Pause"
+          >
+            <i class="fa-solid fa-play ml-0.5" id="play-icon"></i>
+          </button>
+
+          <!-- Next -->
+          <button id="next-btn" class="text-slate-300 hover:text-white transition text-xl p-2" title="Next">
+            <i class="fa-solid fa-forward-step"></i>
+          </button>
+
+          <!-- Auto Play Next Toggle -->
+          <button id="shuffle-btn" class="text-slate-400 hover:text-white transition text-lg p-2" title="Shuffle Playlist">
+            <i class="fa-solid fa-shuffle"></i>
+          </button>
+        </div>
+
+        <!-- Volume and Extra Options -->
+        <div class="flex items-center justify-center gap-3 mt-6 w-full max-w-xs">
+          <button id="mute-btn" class="text-slate-400 hover:text-white text-base">
+            <i class="fa-solid fa-volume-high" id="volume-icon"></i>
+          </button>
+          <input 
+            type="range" 
+            id="volume-slider" 
+            min="0" 
+            max="100" 
+            value="80" 
+            class="w-32 h-1 bg-slate-700 rounded cursor-pointer"
+          />
+          <span id="volume-val" class="text-xs text-slate-400 font-mono w-8">80%</span>
+        </div>
+      </section>
+
+      <!-- Right Column: Featured Playlist and History -->
+      <section class="lg:col-span-5 flex flex-col gap-5">
+        
+        <!-- Preset Playlist Card -->
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-fire text-pink-500"></i>
+              <h3 class="font-bold text-slate-200">জনপ্রিয় প্লেলিস্ট</h3>
+            </div>
+            <span class="text-xs text-slate-400">ক্লিক করে বাজান</span>
+          </div>
+
+          <div id="preset-list" class="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+            <!-- Items populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Recently Played Queue -->
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i>
+              <h3 class="font-bold text-slate-200">ইতিহাস / হিস্ট্রি</h3>
+            </div>
+            <button id="clear-history" class="text-xs text-slate-400 hover:text-rose-400 transition">
+              ক্লিয়ার
+            </button>
+          </div>
+          <div id="history-list" class="space-y-2 max-h-[160px] overflow-y-auto pr-1 text-sm text-slate-400">
+            <p class="text-xs text-slate-500 py-3 text-center">এখনো কোনো গান শোনা হয়নি</p>
+          </div>
+        </div>
+      </section>
+
     </div>
-</div>
+  </main>
 
-<!-- Native Audio Player (Hidden) -->
-<audio id="nativeAudio" preload="auto"></audio>
+  <footer class="border-t border-slate-800/60 py-4 px-6 text-center text-xs text-slate-400 bg-slate-950/80">
+    <p>Powered by YouTube IFrame API • GitHub Pages-এ সম্পূর্ণ হোস্ট করার উপযোগী</p>
+  </footer>
 
-<script>
-    lucide.createIcons();
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-800 border border-slate-700 text-slate-100 px-4 py-2.5 rounded-xl shadow-2xl text-sm transition-all duration-300 opacity-0 pointer-events-none translate-y-3 flex items-center gap-2">
+    <i class="fa-solid fa-circle-info text-indigo-400"></i>
+    <span id="toast-msg">মেসেজ</span>
+  </div>
 
-    // Fast Invidious & Piped public instances (Auto-fallback)
-    const INSTANCES = [
-        "https://invidious.nerdvpn.de",
-        "https://inv.tux.pizza",
-        "https://invidious.drgns.space",
-        "https://pipedapi.kavin.rocks",
-        "https://api.piped.privacy.com.de"
+  <script>
+    /* Demo Playlists */
+    const PRESET_TRACKS = [
+      {
+        id: "kJQP7kiw5Fk",
+        title: "Luis Fonsi - Despacito",
+        artist: "Luis Fonsi ft. Daddy Yankee",
+        thumb: "https://img.youtube.com/vi/kJQP7kiw5Fk/mqdefault.jpg"
+      },
+      {
+        id: "JGwWNGJdvx8",
+        title: "Ed Sheeran - Shape of You",
+        artist: "Ed Sheeran",
+        thumb: "https://img.youtube.com/vi/JGwWNGJdvx8/mqdefault.jpg"
+      },
+      {
+        id: "2Vv-BfVoq4g",
+        title: "Ed Sheeran - Perfect",
+        artist: "Ed Sheeran",
+        thumb: "https://img.youtube.com/vi/2Vv-BfVoq4g/mqdefault.jpg"
+      },
+      {
+        id: "yJg-Y5byMMw",
+        title: "Boro Loker Beti Lo (বড় লোকের বেটি লো)",
+        artist: "Bengali Classic Folk",
+        thumb: "https://img.youtube.com/vi/yJg-Y5byMMw/mqdefault.jpg"
+      },
+      {
+        id: "7C2z4GqqS5E",
+        title: "Kesariya - Brahmāstra",
+        artist: "Arijit Singh, Pritam",
+        thumb: "https://img.youtube.com/vi/7C2z4GqqS5E/mqdefault.jpg"
+      }
     ];
 
-    const audio = document.getElementById('nativeAudio');
-    const fetchBtn = document.getElementById('fetchBtn');
-    const urlInput = document.getElementById('videoUrl');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const playIcon = document.getElementById('playIcon');
-    const progressBar = document.getElementById('progressBar');
-    const currentTimeText = document.getElementById('currentTime');
-    const durationTimeText = document.getElementById('durationTime');
-    const statusBadge = document.getElementById('statusBadge');
-    const thumbImg = document.getElementById('thumbImg');
-    const thumbPlaceholder = document.getElementById('thumbPlaceholder');
-    const trackTitle = document.getElementById('trackTitle');
-    const trackAuthor = document.getElementById('trackAuthor');
-    const volumeBar = document.getElementById('volumeBar');
-    const rewindBtn = document.getElementById('rewindBtn');
-    const forwardBtn = document.getElementById('forwardBtn');
-    const speedBtn = document.getElementById('speedBtn');
+    /* Application State */
+    let player = null;
+    let isPlaying = false;
+    let currentVideoId = "";
+    let isRepeating = false;
+    let isMuted = false;
+    let updateInterval = null;
+    let visualizerInterval = null;
+    let historyTracks = [];
+    let currentPlaylistIndex = -1;
 
-    let currentSpeed = 1.0;
+    /* DOM Selectors */
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const playIcon = document.getElementById('play-icon');
+    const seekBar = document.getElementById('seek-bar');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationTimeEl = document.getElementById('duration-time');
+    const volumeSlider = document.getElementById('volume-slider');
+    const volumeVal = document.getElementById('volume-val');
+    const muteBtn = document.getElementById('mute-btn');
+    const volumeIcon = document.getElementById('volume-icon');
+    const trackTitle = document.getElementById('track-title');
+    const trackChannel = document.getElementById('track-channel');
+    const albumArt = document.getElementById('album-art');
+    const artWrapper = document.getElementById('art-wrapper');
+    const repeatBtn = document.getElementById('repeat-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    const presetList = document.getElementById('preset-list');
+    const historyList = document.getElementById('history-list');
+    const urlForm = document.getElementById('url-form');
+    const urlInput = document.getElementById('youtube-url-input');
+    const visualizerBars = document.querySelectorAll('.bar');
 
-    function extractVideoID(url) {
-        const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
-        const match = url.match(regExp);
-        return (match && match[1]) ? match[1] : (url.length === 11 ? url : null);
+    /* Toast Notification Helper */
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+      }, 3000);
     }
 
+    /* Format seconds into mm:ss */
     function formatTime(seconds) {
-        if (isNaN(seconds)) return "00:00";
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      if (isNaN(seconds) || seconds < 0) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    // Auto Fetch with Fallback Engine
-    async function loadAudio(videoId) {
-        statusBadge.textContent = "⚡ অডিও স্ট্রিম খোঁজা হচ্ছে...";
-        thumbImg.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        thumbImg.style.display = 'block';
-        thumbPlaceholder.style.display = 'none';
-
-        let audioStreamUrl = null;
-
-        for (let i = 0; i < INSTANCES.length; i++) {
-            const host = INSTANCES[i];
-            try {
-                statusBadge.textContent = `সার্ভার সংযোগ করা হচ্ছে (${i + 1}/${INSTANCES.length})...`;
-                
-                // Invidious API
-                if (host.includes('inv')) {
-                    const res = await fetch(`${host}/api/v1/videos/${videoId}?fields=title,author,adaptiveFormats`, { signal: AbortSignal.timeout(4000) });
-                    if (!res.ok) continue;
-                    const data = await res.json();
-                    
-                    trackTitle.textContent = data.title || "Unknown Title";
-                    trackAuthor.textContent = data.author || "YouTube Audio";
-
-                    // Best audio stream filter
-                    const audioFormats = data.adaptiveFormats.filter(f => f.type && f.type.startsWith('audio/'));
-                    if (audioFormats.length > 0) {
-                        // High quality m4a/opus
-                        audioStreamUrl = audioFormats[audioFormats.length - 1].url;
-                        break;
-                    }
-                } 
-                // Piped API
-                else {
-                    const res = await fetch(`${host}/streams/${videoId}`, { signal: AbortSignal.timeout(4000) });
-                    if (!res.ok) continue;
-                    const data = await res.json();
-
-                    trackTitle.textContent = data.title || "Unknown Title";
-                    trackAuthor.textContent = data.uploader || "YouTube Audio";
-
-                    if (data.audioStreams && data.audioStreams.length > 0) {
-                        audioStreamUrl = data.audioStreams[0].url;
-                        break;
-                    }
-                }
-            } catch (err) {
-                console.warn(`Instance failed: ${host}`, err);
-            }
-        }
-
-        if (audioStreamUrl) {
-            statusBadge.textContent = "🟢 দ্রুত অডিও কানেক্ট হয়েছে (বিজ্ঞাপনহীন)";
-            audio.src = audioStreamUrl;
-            audio.play().then(() => {
-                updatePlayState(true);
-            }).catch(e => {
-                statusBadge.textContent = "প্লে বাটনে ক্লিক করুন";
-            });
-        } else {
-            statusBadge.textContent = "❌ অডিও পাওয়া যায়নি! অন্য লিঙ্ক চেষ্টা করুন।";
-        }
+    /* Extract Video ID from various YouTube URL formats */
+    function extractVideoId(url) {
+      const regExp = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = url.match(regExp);
+      return match ? match[1] : null;
     }
 
-    function updatePlayState(isPlaying) {
-        if (isPlaying) {
-            playIcon.setAttribute('data-lucide', 'pause');
-        } else {
-            playIcon.setAttribute('data-lucide', 'play');
+    // Load YouTube IFrame Player API asynchronously
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // Global callback for YouTube API
+    window.onYouTubeIframeAPIReady = function() {
+      player = new YT.Player('youtube-player', {
+        height: '200',
+        width: '200',
+        videoId: PRESET_TRACKS[0].id,
+        playerVars: {
+          'playsinline': 1,
+          'controls': 0,
+          'disablekb': 1,
+          'origin': window.location.origin
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onError': onPlayerError
         }
-        lucide.createIcons();
+      });
+    };
+
+    function onPlayerReady(event) {
+      player.setVolume(80);
+      renderPresetList();
+      showToast("প্লেয়ার প্রস্তুত! গান নির্বাচন করুন।");
     }
 
-    fetchBtn.addEventListener('click', () => {
-        const id = extractVideoID(urlInput.value.trim());
-        if (id) {
-            loadAudio(id);
+    function onPlayerStateChange(event) {
+      // YT.PlayerState: PLAYING (1), PAUSED (2), ENDED (0), BUFFERING (3)
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        playIcon.className = "fa-solid fa-pause";
+        artWrapper.classList.add('animate-spin-slow');
+        startProgressTracker();
+        startVisualizer();
+        fetchCurrentTrackMeta();
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        playIcon.className = "fa-solid fa-play ml-0.5";
+        artWrapper.classList.remove('animate-spin-slow');
+        stopProgressTracker();
+        stopVisualizer();
+      } else if (event.data === YT.PlayerState.ENDED) {
+        isPlaying = false;
+        playIcon.className = "fa-solid fa-play ml-0.5";
+        artWrapper.classList.remove('animate-spin-slow');
+        stopVisualizer();
+        if (isRepeating) {
+          player.seekTo(0);
+          player.playVideo();
         } else {
-            alert('সঠিক YouTube লিঙ্ক দিন');
+          playNext();
         }
+      }
+    }
+
+    function onPlayerError(e) {
+      showToast("গানটি চালাতে সমস্যা হচ্ছে (Embed Restricted হতে পারে)");
+      isPlaying = false;
+      playIcon.className = "fa-solid fa-play ml-0.5";
+      artWrapper.classList.remove('animate-spin-slow');
+      stopVisualizer();
+    }
+
+    /* Audio Visualizer Simulator */
+    function startVisualizer() {
+      stopVisualizer();
+      visualizerInterval = setInterval(() => {
+        visualizerBars.forEach(bar => {
+          const randomH = Math.floor(Math.random() * 32) + 6;
+          bar.style.height = `${randomH}px`;
+        });
+      }, 120);
+    }
+
+    function stopVisualizer() {
+      if (visualizerInterval) clearInterval(visualizerInterval);
+      visualizerBars.forEach(bar => bar.style.height = '6px');
+    }
+
+    /* Track Metadata Synchronizer */
+    function fetchCurrentTrackMeta() {
+      try {
+        const data = player.getVideoData();
+        if (data && data.title) {
+          trackTitle.innerText = data.title;
+          trackChannel.innerText = data.author || "YouTube Artist";
+          const vidId = data.video_id;
+          currentVideoId = vidId;
+          albumArt.src = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+          addToHistory(data.title, data.author || "YouTube Artist", vidId);
+        }
+      } catch (err) {
+        // Safe fallback
+      }
+    }
+
+    function startProgressTracker() {
+      stopProgressTracker();
+      updateInterval = setInterval(() => {
+        if (!player || !player.getDuration) return;
+        const current = player.getCurrentTime() || 0;
+        const total = player.getDuration() || 0;
+
+        currentTimeEl.innerText = formatTime(current);
+        durationTimeEl.innerText = formatTime(total);
+
+        if (total > 0) {
+          seekBar.value = (current / total) * 100;
+        }
+      }, 500);
+    }
+
+    function stopProgressTracker() {
+      if (updateInterval) clearInterval(updateInterval);
+    }
+
+    // Seek bar scrub interaction
+    seekBar.addEventListener('input', () => {
+      if (!player || !player.getDuration) return;
+      const total = player.getDuration();
+      const seekToTime = (seekBar.value / 100) * total;
+      player.seekTo(seekToTime, true);
     });
 
+    /* Play / Pause toggle */
     playPauseBtn.addEventListener('click', () => {
-        if (!audio.src) return;
-        if (audio.paused) {
-            audio.play();
-            updatePlayState(true);
-        } else {
-            audio.pause();
-            updatePlayState(false);
-        }
+      if (!player) return;
+      if (isPlaying) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
     });
 
-    audio.addEventListener('timeupdate', () => {
-        if (!isNaN(audio.duration)) {
-            progressBar.value = (audio.currentTime / audio.duration) * 100;
-            currentTimeText.textContent = formatTime(audio.currentTime);
-            durationTimeText.textContent = formatTime(audio.duration);
-        }
+    /* Volume Slider */
+    volumeSlider.addEventListener('input', (e) => {
+      const vol = parseInt(e.target.value);
+      if (!player) return;
+      player.setVolume(vol);
+      volumeVal.innerText = `${vol}%`;
+      if (vol === 0) {
+        volumeIcon.className = "fa-solid fa-volume-xmark";
+      } else if (vol < 50) {
+        volumeIcon.className = "fa-solid fa-volume-low";
+      } else {
+        volumeIcon.className = "fa-solid fa-volume-high";
+      }
     });
 
-    progressBar.addEventListener('input', () => {
-        if (!isNaN(audio.duration)) {
-            audio.currentTime = (progressBar.value / 100) * audio.duration;
-        }
+    /* Mute / Unmute */
+    muteBtn.addEventListener('click', () => {
+      if (!player) return;
+      if (isMuted) {
+        player.unMute();
+        volumeSlider.value = player.getVolume() || 50;
+        volumeVal.innerText = `${volumeSlider.value}%`;
+        volumeIcon.className = "fa-solid fa-volume-high";
+        isMuted = false;
+      } else {
+        player.mute();
+        volumeVal.innerText = `0%`;
+        volumeIcon.className = "fa-solid fa-volume-xmark";
+        isMuted = true;
+      }
     });
 
-    volumeBar.addEventListener('input', (e) => {
-        audio.volume = e.target.value;
+    /* Repeat Mode */
+    repeatBtn.addEventListener('click', () => {
+      isRepeating = !isRepeating;
+      if (isRepeating) {
+        repeatBtn.classList.remove('text-slate-400');
+        repeatBtn.classList.add('text-indigo-400');
+        showToast("গান রিপিট চালু করা হয়েছে");
+      } else {
+        repeatBtn.classList.remove('text-indigo-400');
+        repeatBtn.classList.add('text-slate-400');
+        showToast("গান রিপিট বন্ধ করা হয়েছে");
+      }
     });
 
-    rewindBtn.addEventListener('click', () => {
-        audio.currentTime = Math.max(0, audio.currentTime - 10);
+    /* Load and Play Specific Video */
+    function loadAndPlay(videoId, customTitle = "", customArtist = "") {
+      if (!player || !videoId) return;
+      currentVideoId = videoId;
+      player.loadVideoById(videoId);
+      player.playVideo();
+
+      if (customTitle) trackTitle.innerText = customTitle;
+      if (customArtist) trackChannel.innerText = customArtist;
+      albumArt.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+
+    urlForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const rawUrl = urlInput.value.trim();
+      const vidId = extractVideoId(rawUrl);
+
+      if (vidId) {
+        loadAndPlay(vidId);
+        showToast("গান লোড করা হচ্ছে...");
+        urlInput.value = "";
+      } else {
+        showToast("সঠিক YouTube URL দিন!");
+      }
     });
 
-    forwardBtn.addEventListener('click', () => {
-        audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+    /* Render Preset Tracks */
+    function renderPresetList() {
+      presetList.innerHTML = PRESET_TRACKS.map((t, idx) => `
+        <div 
+          onclick="playPresetTrack(${idx})" 
+          class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-800/60 cursor-pointer transition border border-transparent hover:border-slate-700/50 group"
+        >
+          <img src="${t.thumb}" class="w-12 h-12 object-cover rounded-lg group-hover:scale-105 transition" onerror="this.src='https://placehold.co/100x100/1e293b/fff?text=Music'">
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-semibold text-slate-200 truncate group-hover:text-indigo-300 transition">${t.title}</h4>
+            <p class="text-xs text-slate-400 truncate">${t.artist}</p>
+          </div>
+          <button class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition">
+            <i class="fa-solid fa-play text-[10px]"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    window.playPresetTrack = function(index) {
+      currentPlaylistIndex = index;
+      const track = PRESET_TRACKS[index];
+      loadAndPlay(track.id, track.title, track.artist);
+    };
+
+    /* Next / Previous */
+    function playNext() {
+      if (currentPlaylistIndex < PRESET_TRACKS.length - 1) {
+        playPresetTrack(currentPlaylistIndex + 1);
+      } else {
+        playPresetTrack(0);
+      }
+    }
+
+    function playPrev() {
+      if (currentPlaylistIndex > 0) {
+        playPresetTrack(currentPlaylistIndex - 1);
+      } else {
+        playPresetTrack(PRESET_TRACKS.length - 1);
+      }
+    }
+
+    nextBtn.addEventListener('click', playNext);
+    prevBtn.addEventListener('click', playPrev);
+
+    /* Shuffle */
+    shuffleBtn.addEventListener('click', () => {
+      const randomIdx = Math.floor(Math.random() * PRESET_TRACKS.length);
+      playPresetTrack(randomIdx);
+      showToast("এলোমেলো গান বাজানো হচ্ছে");
     });
 
-    speedBtn.addEventListener('click', () => {
-        const speeds = [1.0, 1.25, 1.5, 2.0];
-        let nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
-        currentSpeed = speeds[nextIndex];
-        audio.playbackRate = currentSpeed;
-        speedBtn.textContent = `${currentSpeed}x`;
+    /* History Management */
+    function addToHistory(title, artist, id) {
+      if (historyTracks.some(t => t.id === id)) return;
+      historyTracks.unshift({ title, artist, id });
+      if (historyTracks.length > 8) historyTracks.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (historyTracks.length === 0) {
+        historyList.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">এখনো কোনো গান শোনা হয়নি</p>`;
+        return;
+      }
+      historyList.innerHTML = historyTracks.map(item => `
+        <div onclick="loadAndPlay('${item.id}', '${item.title.replace(/'/g, "\\'")}', '${item.artist.replace(/'/g, "\\'")}')" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-800/40 cursor-pointer transition text-xs">
+          <span class="truncate text-slate-300 max-w-[220px]">${item.title}</span>
+          <i class="fa-solid fa-play text-slate-500 hover:text-indigo-400"></i>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('clear-history').addEventListener('click', () => {
+      historyTracks = [];
+      renderHistory();
     });
-</script>
+  </script>
 </body>
 </html>
