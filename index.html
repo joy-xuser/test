@@ -622,6 +622,59 @@
             if (directMatch && directMatch[1]) return directMatch[1];
             return null;
         }
+
+        /* ==========================================================
+           AD-FREE DIRECT AUDIO STREAM ENGINE (বিজ্ঞাপনহীন ইঞ্জিন)
+           ========================================================== */
+        async function getAdFreeAudioStream(videoId) {
+            const cacheKey = 'agomoni_stream_' + videoId;
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) return cached;
+
+            const streamApis = [
+                `https://invidious.nerdvpn.de/api/v1/videos/${videoId}?fields=adaptiveFormats`,
+                `https://inv.nadeko.net/api/v1/videos/${videoId}?fields=adaptiveFormats`,
+                `https://invidious.tiekoetter.com/api/v1/videos/${videoId}?fields=adaptiveFormats`,
+                `https://yewtu.be/api/v1/videos/${videoId}?fields=adaptiveFormats`,
+                `https://pipedapi.kavin.rocks/streams/${videoId}`,
+                `https://api.piped.privacy.com.de/streams/${videoId}`
+            ];
+
+            for (const apiUrl of streamApis) {
+                try {
+                    const res = await fetch(apiUrl, { signal: AbortSignal.timeout(3000) });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+
+                    // Invidious Audio Extraction (Direct M4A/WebM)
+                    if (Array.isArray(data.adaptiveFormats)) {
+                        const audioFormats = data.adaptiveFormats.filter(f => f.type && f.type.startsWith('audio/'));
+                        if (audioFormats.length > 0) {
+                            const bestAudio = audioFormats.find(f => (f.type && f.type.includes('mp4')) || f.container === 'm4a') || audioFormats[0];
+                            if (bestAudio && bestAudio.url) {
+                                sessionStorage.setItem(cacheKey, bestAudio.url);
+                                return bestAudio.url;
+                            }
+                        }
+                    }
+
+                    // Piped Audio Extraction
+                    if (Array.isArray(data.audioStreams) && data.audioStreams.length > 0) {
+                        const bestAudio = data.audioStreams.find(s => s.format === 'M4A') || data.audioStreams[0];
+                        if (bestAudio && bestAudio.url) {
+                            sessionStorage.setItem(cacheKey, bestAudio.url);
+                            return bestAudio.url;
+                        }
+                    }
+                } catch (e) {
+                    // Try next instance
+                }
+            }
+
+            // Fallback direct stream endpoint
+            return `https://invidious.nerdvpn.de/latest_version?id=${videoId}&itag=140&listen=1`;
+        }
+
         // Passcode & Add Song Modal Logic
         const CORRECT_PASSCODE = "47842828";
         const passcodeModal = document.getElementById('passcode-modal');
@@ -1031,7 +1084,7 @@
             });
         }
 
-        window.playTrack = function(id) {
+        window.playTrack = async function(id) {
             let track = tracks.find(t => t.id === id);
             if (!track) {
                 for (const listName in playlistsData) {
@@ -1054,13 +1107,43 @@
                 currentAlbumArt.src = track.image || 'https://placehold.co/150x150/3c1e0a/ffb450?text=Music';
 
                 if (track.isYoutube && (track.ytUrl || track.id)) {
-                    activePlayerType = 'youtube';
-                    audio.pause();
-
                     const videoId = extractVideoID(track.ytUrl) || track.id.replace('yt_pl_', '').replace('yt_bulk_', '').split('_')[0];
-                    if (ytPlayerReady && ytPlayer && typeof ytPlayer.loadVideoById === 'function' && videoId) {
-                        ytPlayer.loadVideoById(videoId);
-                        ytPlayer.playVideo();
+                    
+                    // বিজ্ঞাপন সম্পূর্ণ বাইপাস করে সরাসরি বিজ্ঞাপনহীন অডিও স্ট্রিম প্লে করা হবে
+                    activePlayerType = 'html5';
+                    if (ytPlayer && ytPlayerReady && typeof ytPlayer.pauseVideo === 'function') {
+                        ytPlayer.pauseVideo();
+                    }
+                    stopYTProgress();
+
+                    const currentLoadingId = track.id;
+                    const prevTitle = track.title;
+                    trackTitleDisplay.textContent = "⚡ বিজ্ঞাপন ছাড়া গান লোড হচ্ছে...";
+
+                    try {
+                        const streamUrl = await getAdFreeAudioStream(videoId);
+                        if (currentTrackId !== currentLoadingId) return; // User switched track
+
+                        trackTitleDisplay.textContent = prevTitle;
+                        audio.src = streamUrl;
+                        audio.load();
+                        audio.play().catch(err => {
+                            console.warn("Direct audio blocked, falling back to iframe:", err);
+                            activePlayerType = 'youtube';
+                            audio.pause();
+                            if (ytPlayerReady && ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+                                ytPlayer.loadVideoById(videoId);
+                                ytPlayer.playVideo();
+                            }
+                        });
+                    } catch (err) {
+                        trackTitleDisplay.textContent = prevTitle;
+                        activePlayerType = 'youtube';
+                        audio.pause();
+                        if (ytPlayerReady && ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+                            ytPlayer.loadVideoById(videoId);
+                            ytPlayer.playVideo();
+                        }
                     }
                 } else if (track.url) {
                     activePlayerType = 'html5';
