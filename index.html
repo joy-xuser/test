@@ -125,8 +125,8 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
-    <!-- Hidden Offscreen YouTube IFrame container (Keeps Audio Active 100%) -->
-    <div style="position: fixed; top: -2000px; left: -2000px; width: 250px; height: 250px; opacity: 0.001; pointer-events: none; z-index: -99;">
+    <!-- Hidden Viewable YouTube Player container (Inside viewport so browser doesn't throttle audio) -->
+    <div id="yt-player-box" style="position: fixed; bottom: 8px; left: 8px; width: 200px; height: 120px; opacity: 0.02; pointer-events: none; z-index: 1; border-radius: 8px; overflow: hidden;">
         <div id="yt-player"></div>
     </div>
 
@@ -564,9 +564,13 @@
 
         function extractVideoID(url) {
             if (!url) return null;
-            const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
+            url = url.trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+            const regExp = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:.*v=|.*\/v\/|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/;
             const match = url.match(regExp);
-            return (match && match[1]) ? match[1] : (url.length === 11 ? url : null);
+            if (match && match[1]) return match[1];
+            const fallback = url.match(/([a-zA-Z0-9_-]{11})/);
+            return fallback ? fallback[1] : null;
         }
 
         function extractPlaylistID(url) {
@@ -580,39 +584,57 @@
         }
 
         /* ==========================================================
-           YOUTUBE IFRAME INITIALIZER (Zero-Lag Ad-Reduced Embed)
+           YOUTUBE IFRAME INITIALIZER (গ্যারান্টেড প্লেব্যাক ইঞ্জিন)
            ========================================================== */
+        function initYouTubePlayer() {
+            if (ytPlayer) return;
+            if (window.YT && window.YT.Player) {
+                ytPlayer = new YT.Player('yt-player', {
+                    height: '120',
+                    width: '200',
+                    playerVars: {
+                        'autoplay': 1,
+                        'controls': 0,
+                        'disablekb': 1,
+                        'fs': 0,
+                        'playsinline': 1,
+                        'rel': 0,
+                        'enablejsapi': 1
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
+                    }
+                });
+            }
+        }
+
         window.onYouTubeIframeAPIReady = function() {
-            ytPlayer = new YT.Player('yt-player', {
-                height: '250',
-                width: '250',
-                host: 'https://www.youtube-nocookie.com',
-                playerVars: {
-                    'autoplay': 1,
-                    'controls': 0,
-                    'disablekb': 1,
-                    'fs': 0,
-                    'iv_load_policy': 3,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'playsinline': 1
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
-                }
-            });
+            initYouTubePlayer();
         };
+
+        // যদি API স্ক্রিপ্ট ইতিমধ্যেই লোড হয়ে গিয়ে থাকে
+        if (window.YT && window.YT.Player) {
+            initYouTubePlayer();
+        }
 
         function onPlayerReady(event) {
             ytPlayerReady = true;
-            ytPlayer.setVolume(Math.round(currentVolume * 100));
+            try {
+                ytPlayer.unMute();
+                ytPlayer.setVolume(Math.round(currentVolume * 100));
+            } catch(e) {}
+
             if (pendingVideoId) {
                 const vid = pendingVideoId;
                 pendingVideoId = null;
-                ytPlayer.loadVideoById(vid);
-                ytPlayer.playVideo();
+                try {
+                    ytPlayer.loadVideoById(vid);
+                    ytPlayer.playVideo();
+                } catch(e) {
+                    console.error("Auto-start error:", e);
+                }
             }
         }
 
@@ -643,6 +665,11 @@
         function onPlayerError(err) {
             console.warn("YouTube player error:", err);
             if (artLoader) artLoader.classList.add('hidden');
+            isPlaying = false;
+            setPlayIcon(false);
+            if (err && (err.data === 150 || err.data === 101)) {
+                trackArtistDisplay.textContent = "ভিডিওর মালিক এমবেড বন্ধ রেখেছে। অন্য গান চেষ্টা করুন।";
+            }
         }
 
         function startYTProgressLoop() {
@@ -695,17 +722,25 @@
 
             if (artLoader) artLoader.classList.remove('hidden');
 
-            if (track.isYoutube) {
+            const vid = extractVideoID(track.ytUrl || track.url) || (track.isYoutube ? track.id.replace('yt_pl_', '').replace('yt_bulk_', '').split('_')[0] : null);
+
+            if (vid) {
                 activePlayerType = 'youtube';
                 htmlAudio.pause();
-                
-                const vid = extractVideoID(track.ytUrl) || track.id.replace('yt_pl_', '').replace('yt_bulk_', '').split('_')[0];
 
                 if (ytPlayer && ytPlayerReady && typeof ytPlayer.loadVideoById === 'function') {
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
+                    try {
+                        ytPlayer.unMute();
+                        ytPlayer.setVolume(Math.round(currentVolume * 100));
+                        ytPlayer.loadVideoById(vid);
+                        ytPlayer.playVideo();
+                    } catch(e) {
+                        console.error("Playback start error:", e);
+                        pendingVideoId = vid;
+                    }
                 } else {
                     pendingVideoId = vid;
+                    initYouTubePlayer();
                 }
             } else if (track.url) {
                 activePlayerType = 'html5';
@@ -733,10 +768,11 @@
         // Play/Pause হ্যান্ডলার
         playPauseBtn.addEventListener('click', () => {
             if (tracks.length === 0) return;
+            if (!currentTrackId) currentTrackId = tracks[0].id;
 
             if (activePlayerType === 'youtube') {
                 if (!ytPlayer || !ytPlayerReady) {
-                    playTrack(currentTrackId || tracks[0].id);
+                    playTrack(currentTrackId);
                     return;
                 }
 
@@ -748,7 +784,7 @@
                 }
             } else {
                 if (!htmlAudio.src) {
-                    playTrack(currentTrackId || tracks[0].id);
+                    playTrack(currentTrackId);
                     return;
                 }
 
