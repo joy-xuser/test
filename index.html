@@ -44,10 +44,6 @@
                 inset 0 1px 15px rgba(255, 180, 80, 0.18);
         }
 
-        .glass-header {
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-        }
-
         /* Custom Scrollbar for Playlist */
         ::-webkit-scrollbar {
             width: 6px;
@@ -61,33 +57,6 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Range Slider Styling */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-            outline: none;
-        }
-        
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            background: #ff8c00;
-            cursor: pointer;
-            margin-top: -4px;
-            box-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
         }
 
         .progress-bar-container {
@@ -134,22 +103,6 @@
             border-left: 3px solid #f97316;
         }
 
-        .brand-orange {
-            color: #f97316;
-        }
-        
-        .bg-brand-orange {
-            background-color: #f97316;
-        }
-
-        .text-glow {
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-        
-        .title-glow {
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(249, 115, 22, 0.6);
-        }
-
         .live-dot {
             animation: blink 2s infinite;
         }
@@ -172,7 +125,7 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
-    <!-- Offscreen YouTube iframe container (must NOT be display:none, otherwise browser blocks audio) -->
+    <!-- Offscreen YouTube iframe container (Kept active for background playback) -->
     <div style="position: fixed; bottom: -300px; right: -300px; width: 200px; height: 200px; opacity: 0.001; pointer-events: none; z-index: -999;">
         <div id="yt-player"></div>
     </div>
@@ -182,6 +135,13 @@
 
     <div class="main-content-wrapper z-10 w-full h-full p-4 md:p-6 lg:p-8 flex flex-col justify-between">
         
+        <!-- Top bar with user profile/admin button -->
+        <div class="w-full flex justify-end items-center z-20">
+            <button id="open-passcode-modal" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-[#ffaa3c]/30 text-[#ffb866] hover:text-white flex items-center justify-center transition-all shadow-lg active:scale-95" title="Admin Access">
+                <i class="fas fa-user text-base"></i>
+            </button>
+        </div>
+
         <!-- Middle Section: Playlist on the right -->
         <div class="flex-grow flex items-center justify-end w-full mt-4 lg:mt-0 relative z-20">
             
@@ -225,7 +185,7 @@
                 <div class="px-6 py-4 flex justify-between items-center bg-transparent mt-2 relative z-20">
                     <div class="flex items-center gap-2.5 cursor-pointer group hover:bg-white/5 px-3 py-1.5 -ml-3 rounded-lg transition-colors" id="open-category-drawer" title="View Categories">
                         <i class="fas fa-list-ul text-[#ff9d33]"></i>
-                        <h3 class="font-bold text-[13px] tracking-[0.15em] text-[#ffb866] group-hover:text-white transition-colors" id="playlist-main-title">PLAYLIST (8)</h3>
+                        <h3 class="font-bold text-[13px] tracking-[0.15em] text-[#ffb866] group-hover:text-white transition-colors" id="playlist-main-title">PLAYLIST (0)</h3>
                         <i class="fas fa-chevron-right text-[#ffb866] text-[10px] opacity-70 group-hover:translate-x-1 transition-transform"></i>
                     </div>
                     <button id="toggle-playlist" class="text-[12px] font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors flex items-center gap-2">
@@ -265,8 +225,8 @@
                         </div>
                         
                         <!-- Track Details -->
-                        <h4 class="font-semibold text-white text-[17px] tracking-wide truncate mb-0.5" id="current-track-title">Chandipath (Recitation)</h4>
-                        <span class="text-[13px] text-gray-300 truncate mb-4" id="current-track-artist">Birendra Krishna Bhadra</span>
+                        <h4 class="font-semibold text-white text-[17px] tracking-wide truncate mb-0.5" id="current-track-title">গান যোগ করুন</h4>
+                        <span class="text-[13px] text-gray-300 truncate mb-4" id="current-track-artist">শিল্পী নির্বাচন নেই</span>
                         
                         <!-- Progress Bar & Timestamps -->
                         <div class="w-full relative">
@@ -276,7 +236,7 @@
                             </div>
                             <div class="flex justify-between items-center w-full mt-2 px-0.5">
                                 <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="current-time">00:00</span>
-                                <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="total-time">06:45</span>
+                                <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="total-time">00:00</span>
                             </div>
                         </div>
                     </div>
@@ -295,69 +255,167 @@
                     </button>
                 </div>
 
-                <!-- Right: Volume & Expand -->
-                <div class="flex items-center justify-end gap-3 shrink-0 pl-4 w-[160px]">
-                    <i class="fas fa-volume-up text-gray-300 text-[15px] cursor-pointer hover:text-white transition-colors" id="mute-icon" title="Mute/Unmute"></i>
-                    <div class="w-[80px] h-[4px] bg-white/20 rounded-full relative cursor-pointer ml-1" id="volume-container">
-                        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full w-[100%]" id="volume-fill"></div>
-                        <div class="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] bg-[#FFE4B5] rounded-full left-[100%] shadow-[0_0_5px_rgba(255,140,0,0.6)]" id="volume-thumb"></div>
+                <!-- Right: Volume & Mute (Shifted 1cm left) -->
+                <div class="flex items-center justify-end gap-3 shrink-0 mr-4 lg:mr-8 pr-6 w-[170px]">
+                    <i class="fas fa-volume-up text-gray-300 text-sm cursor-pointer hover:text-white transition-colors" id="mute-icon" title="Mute / Unmute"></i>
+                    <div class="w-[85px] h-[5px] bg-white/20 rounded-full relative cursor-pointer py-1" id="volume-container">
+                        <div class="absolute top-1/2 -translate-y-1/2 left-0 h-[5px] bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full pointer-events-none" id="volume-fill" style="width: 100%;"></div>
+                        <div class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#FFE4B5] rounded-full shadow-[0_0_6px_rgba(255,140,0,0.8)] pointer-events-none" id="volume-thumb" style="left: 100%;"></div>
                     </div>
                 </div>
 
             </div>
         </div>
+    </div>
 
+    <!-- MODAL: PASSCODE VERIFICATION (47842828) -->
+    <div id="passcode-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="golden-glass w-full max-w-xs rounded-3xl p-6 border border-[#ffaa3c]/40 shadow-2xl relative text-center">
+            <button id="close-passcode-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="w-12 h-12 mx-auto rounded-full bg-[#ff9d33]/20 border border-[#ffaa3c]/40 flex items-center justify-center text-[#ffb866] mb-3">
+                <i class="fas fa-lock text-lg"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1">প্রবেশ পাসকোড দিন</h3>
+            <p class="text-xs text-gray-400 mb-4">অ্যাডমিন অ্যাক্সেসের জন্য পাসকোড লিখুন</p>
+            <form id="passcode-form" class="space-y-3">
+                <input type="password" id="input-passcode" placeholder="পাসকোড দিন" maxlength="12" class="w-full text-center tracking-widest bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors" autocomplete="off">
+                <p id="passcode-error" class="text-xs text-red-400 hidden">ভুল পাসকোড! আবার চেষ্টা করুন।</p>
+                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-lg transition-transform active:scale-[0.98]">
+                    যাচাই করুন
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD SONG / PLAYLIST POPUP -->
+    <div id="add-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="golden-glass w-full max-w-md rounded-3xl p-6 border border-[#ffaa3c]/40 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-[#ffb866] flex items-center gap-2">
+                    <i class="fas fa-layer-group"></i> গান / প্লেলিস্ট যোগ করুন
+                </h3>
+                <button id="close-add-modal" class="text-gray-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Tabs: Single Track vs Full YouTube Playlist -->
+            <div class="flex rounded-xl bg-black/40 p-1 mb-4 border border-white/10">
+                <button type="button" id="tab-single-btn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all">
+                    একক গান (Single)
+                </button>
+                <button type="button" id="tab-playlist-btn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">
+                    ইউটিউব প্লেলিস্ট (Full Playlist)
+                </button>
+            </div>
+
+            <!-- Form 1: Single Track -->
+            <form id="add-song-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube বা MP3 লিংক</label>
+                    <input type="url" id="input-song-url" required placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">গানের নাম (Title)</label>
+                    <input type="text" id="input-song-title" required placeholder="যেমন: Chandipath বা Dugga Elo" class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">শিল্পী (Artist)</label>
+                    <input type="text" id="input-song-artist" required placeholder="যেমন: Birendra Krishna Bhadra" class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">ক্যাটাগরি (Category)</label>
+                    <select id="input-song-category" class="w-full bg-[#201005] border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                        <option value="Mahalaya">Mahalaya</option>
+                        <option value="Shasthi">Shasthi</option>
+                        <option value="Saptami">Saptami</option>
+                        <option value="Ashtami">Ashtami</option>
+                        <option value="Navami">Navami</option>
+                        <option value="Dashami">Dashami</option>
+                    </select>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-[0.98]">
+                        গানটি প্লেলিস্টে সেভ করুন
+                    </button>
+                </div>
+            </form>
+
+            <!-- Form 2: Entire YouTube Playlist Import (Multi-Tier Engine) -->
+            <form id="add-playlist-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube Playlist লিংক</label>
+                    <input type="url" id="input-playlist-url" required placeholder="https://www.youtube.com/playlist?list=PL..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                    <p class="text-[11px] text-gray-400 mt-1">পাবলিক বা আনলিস্টেড যে কোনো ইউটিউব প্লেলিস্ট স্বয়ংক্রিয়ভাবে এক্সট্র্যাক্ট হবে।</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">কোন ক্যাটাগরিতে যোগ হবে?</label>
+                    <select id="input-playlist-category" class="w-full bg-[#201005] border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                        <option value="Mahalaya">Mahalaya</option>
+                        <option value="Shasthi" selected>Shasthi</option>
+                        <option value="Saptami">Saptami</option>
+                        <option value="Ashtami">Ashtami</option>
+                        <option value="Navami">Navami</option>
+                        <option value="Dashami">Dashami</option>
+                    </select>
+                </div>
+
+                <div id="playlist-status-msg" class="text-xs text-center py-2.5 px-3 rounded-lg bg-black/40 border border-white/10 hidden font-medium transition-all"></div>
+
+                <div class="pt-2">
+                    <button type="submit" id="btn-fetch-playlist" class="w-full py-3 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i class="fas fa-cloud-arrow-down"></i> সব গান ফেচ করে যুক্ত করুন
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
-        const allTracks = [
-            { id: 't1', title: "Chandipath (Recitation)", artist: "B. K. Bhadra", duration: "06:45", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-            { id: 't2', title: "Dhak — Solo Instrumental", artist: "P. Dhak", duration: "03:20", image: "https://placehold.co/150x150/3c1e0a/ffb450?text=Dhak", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-            { id: 't3', title: "Ashtami Aarti with Dhak", artist: "Live Recording", duration: "05:15", image: "https://placehold.co/150x150/521313/ffffff?text=Aarti", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-            { id: 't4', title: "Conch Shell (Shankha)", artist: "Ambience", duration: "01:30", image: "https://placehold.co/150x150/1a0a00/ffb450?text=Shankha", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
-            { id: 't5', title: "Temple & Puja Bells", artist: "Ambience", duration: "02:45", image: "https://placehold.co/150x150/2a1a0a/ffffff?text=Bells", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
-            { id: 't6', title: "Dhunuchi Naach Ambience", artist: "Live Dhak Beats", duration: "04:10", image: "https://placehold.co/150x150/4a2a1a/ff9d33?text=Dhunuchi", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
-            { id: 't7', title: "Priest Chanting Mantras", artist: "Puja Aarambho", duration: "10:05", image: "https://placehold.co/150x150/3c1e0a/ffb450?text=Mantras", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
-            { id: 't8', title: "Anjali Crowd Chanting", artist: "Ashtami Pushpanjali", duration: "08:20", image: "https://placehold.co/150x150/1a0a00/ffffff?text=Anjali", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" }
-        ];
-
+        /* ==========================================================
+           প্লেলিস্ট ডাটা এবং লোকাল স্টোরেজ সিঙ্ক
+           ========================================================== */
         const playlistsData = {
-            'Mahalaya': [ allTracks[0] ],
-            'Shasthi': [
-                { 
-                    id: 'yt_shasthi_1', 
-                    title: "Ek Phali Gram (এক ফালি গ্রাম)", 
-                    artist: "Sayaner Gaan", 
-                    duration: "03:19",
-                    isYoutube: true,
-                    ytUrl: "https://youtu.be/_LeKoxKeh8g",
-                    image: "https://img.youtube.com/vi/_LeKoxKeh8g/hqdefault.jpg"
-                },
-                {
-                    id: 'yt_shasthi_2',
-                    title: "Dugga Elo (দুগ্গা এলো)",
-                    artist: "Monali Thakur",
-                    duration: "04:12",
-                    isYoutube: true,
-                    ytUrl: "https://youtu.be/8l-y8_2zXoA",
-                    image: "https://placehold.co/150x150/3c1e0a/ffb450?text=Dugga+Elo"
-                },
-                {
-                    id: 'yt_shasthi_3',
-                    title: "Bolo Dugga Maiki",
-                    artist: "Arijit Singh",
-                    duration: "03:45",
-                    isYoutube: true,
-                    ytUrl: "https://youtu.be/L8J6xG16T70",
-                    image: "https://placehold.co/150x150/521313/ffffff?text=Dugga+Maiki"
-                }
-            ],
-            'Saptami': [ allTracks[2], allTracks[4] ],
-            'Ashtami': [ allTracks[2], allTracks[7] ],
-            'Navami': [ allTracks[5] ],
-            'Dashami': [ allTracks[6] ],
-            'All Tracks': allTracks
+            'Mahalaya': [],
+            'Shasthi': [],
+            'Saptami': [],
+            'Ashtami': [],
+            'Navami': [],
+            'Dashami': [],
+            'All Tracks': []
         };
+
+        const savedTracks = localStorage.getItem('agomoni_user_tracks');
+        if (savedTracks) {
+            try {
+                const parsed = JSON.parse(savedTracks);
+                for (const cat in parsed) {
+                    if (playlistsData[cat]) {
+                        playlistsData[cat] = parsed[cat];
+                    }
+                }
+            } catch(e) {
+                console.error("Error loading local tracks", e);
+            }
+        }
+
+        function refreshAllTracks() {
+            let combined = [];
+            for (const cat in playlistsData) {
+                if (cat !== 'All Tracks') {
+                    combined = combined.concat(playlistsData[cat]);
+                }
+            }
+            playlistsData['All Tracks'] = combined;
+        }
+        refreshAllTracks();
 
         const audio = new Audio();
         
@@ -368,7 +426,7 @@
 
         let currentPlaylistName = 'All Tracks';
         let tracks = playlistsData[currentPlaylistName];
-        let currentTrackId = 't1';
+        let currentTrackId = tracks.length > 0 ? tracks[0].id : null;
         let isPlaying = false; 
         
         // UI Elements
@@ -410,6 +468,9 @@
 
         function onPlayerReady(event) {
             ytPlayerReady = true;
+            if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+                ytPlayer.setVolume(currentVolume * 100);
+            }
         }
 
         function onPlayerStateChange(event) {
@@ -419,8 +480,10 @@
                 isPlaying = true;
                 setPlayIcon(true);
                 startYTProgress();
-                totalTimeDisplay.textContent = formatTime(ytPlayer.getDuration());
-            } else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.BUFFERING) {
+                if (typeof ytPlayer.getDuration === 'function') {
+                    totalTimeDisplay.textContent = formatTime(ytPlayer.getDuration());
+                }
+            } else if (event.data == YT.PlayerState.PAUSED) {
                 isPlaying = false;
                 setPlayIcon(false);
                 stopYTProgress();
@@ -437,10 +500,17 @@
             return (match && match[1]) ? match[1] : (url.length === 11 ? url : null);
         }
 
+        function extractPlaylistID(url) {
+            if (!url) return null;
+            const regExp = /[?&]list=([a-zA-Z0-9_-]+)/;
+            const match = url.match(regExp);
+            return match ? match[1] : (url.startsWith('PL') ? url : null);
+        }
+
         function startYTProgress() {
             stopYTProgress();
             ytProgressInterval = setInterval(() => {
-                if (ytPlayer && activePlayerType === 'youtube') {
+                if (ytPlayer && activePlayerType === 'youtube' && typeof ytPlayer.getCurrentTime === 'function') {
                     const curr = ytPlayer.getCurrentTime();
                     const duration = ytPlayer.getDuration();
                     if (duration > 0) {
@@ -448,7 +518,7 @@
                         currentTimeDisplay.textContent = formatTime(curr);
                     }
                 }
-            }, 500);
+            }, 400);
         }
 
         function stopYTProgress() {
@@ -473,30 +543,118 @@
         }
 
         function updateProgressBar(percentage) {
-            progressFill.style.width = `${percentage}%`;
-            progressThumb.style.left = `${percentage}%`;
+            const clamped = Math.max(0, Math.min(100, percentage));
+            progressFill.style.width = `${clamped}%`;
+            progressThumb.style.left = `${clamped}%`;
         }
 
-        // Play/Pause Controller
-        playPauseBtn.addEventListener('click', () => {
-            if (activePlayerType === 'youtube') {
-                if (!ytPlayerReady || !ytPlayer) return;
-                const state = (typeof ytPlayer.getPlayerState === 'function') ? ytPlayer.getPlayerState() : -1;
-                if (state === YT.PlayerState.PLAYING) {
-                    ytPlayer.pauseVideo();
-                } else {
-                    ytPlayer.playVideo();
+        // --- INTERACTIVE SEEK (CLICK + DRAG) ---
+        let isSeeking = false;
+
+        function handleSeek(clientX) {
+            const rect = progressContainer.getBoundingClientRect();
+            let pos = (clientX - rect.left) / rect.width;
+            pos = Math.max(0, Math.min(1, pos));
+            updateProgressBar(pos * 100);
+
+            if (activePlayerType === 'youtube' && ytPlayer && typeof ytPlayer.getDuration === 'function') {
+                const dur = ytPlayer.getDuration();
+                if (dur > 0) {
+                    ytPlayer.seekTo(pos * dur, true);
+                    currentTimeDisplay.textContent = formatTime(pos * dur);
                 }
+            } else if (activePlayerType === 'html5' && !isNaN(audio.duration) && audio.duration > 0) {
+                audio.currentTime = pos * audio.duration;
+                currentTimeDisplay.textContent = formatTime(audio.currentTime);
+            }
+        }
+
+        progressContainer.addEventListener('mousedown', (e) => {
+            isSeeking = true;
+            handleSeek(e.clientX);
+        });
+
+        progressContainer.addEventListener('touchstart', (e) => {
+            isSeeking = true;
+            if (e.touches[0]) handleSeek(e.touches[0].clientX);
+        }, { passive: true });
+
+        // --- INTERACTIVE VOLUME (CLICK + DRAG) ---
+        let currentVolume = 1;
+        let isAdjustingVolume = false;
+
+        function setVolume(pos) {
+            pos = Math.max(0, Math.min(1, pos));
+            currentVolume = pos;
+            audio.volume = pos;
+
+            if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+                ytPlayer.setVolume(pos * 100);
+                if (pos > 0 && typeof ytPlayer.isMuted === 'function' && ytPlayer.isMuted()) {
+                    ytPlayer.unMute();
+                }
+            }
+            updateVolumeUI(pos);
+        }
+
+        function handleVolumeMove(clientX) {
+            const rect = volumeContainer.getBoundingClientRect();
+            let pos = (clientX - rect.left) / rect.width;
+            setVolume(pos);
+        }
+
+        volumeContainer.addEventListener('mousedown', (e) => {
+            isAdjustingVolume = true;
+            handleVolumeMove(e.clientX);
+        });
+
+        volumeContainer.addEventListener('touchstart', (e) => {
+            isAdjustingVolume = true;
+            if (e.touches[0]) handleVolumeMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isSeeking) handleSeek(e.clientX);
+            if (isAdjustingVolume) handleVolumeMove(e.clientX);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!e.touches[0]) return;
+            if (isSeeking) handleSeek(e.touches[0].clientX);
+            if (isAdjustingVolume) handleVolumeMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        window.addEventListener('mouseup', () => {
+            isSeeking = false;
+            isAdjustingVolume = false;
+        });
+
+        window.addEventListener('touchend', () => {
+            isSeeking = false;
+            isAdjustingVolume = false;
+        });
+
+        function updateVolumeUI(vol) {
+            volumeFill.style.width = `${vol * 100}%`;
+            volumeThumb.style.left = `${vol * 100}%`;
+            if (vol === 0) {
+                muteIcon.className = "fas fa-volume-mute text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
+            } else if (vol < 0.5) {
+                muteIcon.className = "fas fa-volume-down text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
             } else {
-                if (audio.src) {
-                    if (isPlaying) {
-                        audio.pause();
-                    } else {
-                        audio.play();
-                    }
-                } else {
-                    playTrack(currentTrackId);
-                }
+                muteIcon.className = "fas fa-volume-up text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
+            }
+        }
+
+        muteIcon.addEventListener('click', () => {
+            if (currentVolume > 0) {
+                audio.muted = true;
+                if (ytPlayer && typeof ytPlayer.mute === 'function') ytPlayer.mute();
+                setVolume(0);
+            } else {
+                audio.muted = false;
+                if (ytPlayer && typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
+                setVolume(0.8);
             }
         });
 
@@ -534,60 +692,30 @@
             if (activePlayerType === 'html5') playNextTrack();
         });
 
-        // Seek Control
-        progressContainer.addEventListener('click', (e) => {
-            const rect = progressContainer.getBoundingClientRect();
-            const pos = (e.clientX - rect.left) / rect.width;
-            
-            if (activePlayerType === 'youtube' && ytPlayerReady) {
-                const dur = ytPlayer.getDuration();
-                ytPlayer.seekTo(pos * dur, true);
-            } else if (activePlayerType === 'html5' && !isNaN(audio.duration)) {
-                audio.currentTime = pos * audio.duration;
-            }
-        });
-
-        // Volume Controls
-        volumeContainer.addEventListener('click', (e) => {
-            const rect = volumeContainer.getBoundingClientRect();
-            let pos = (e.clientX - rect.left) / rect.width;
-            pos = Math.max(0, Math.min(1, pos));
-            
-            audio.volume = pos;
-            if (ytPlayerReady) {
-                ytPlayer.setVolume(pos * 100);
-            }
-            updateVolumeUI(pos);
-        });
-
-        function updateVolumeUI(vol) {
-            volumeFill.style.width = `${vol * 100}%`;
-            volumeThumb.style.left = `${vol * 100}%`;
-            if (vol === 0) {
-                muteIcon.className = "fas fa-volume-mute text-gray-300 text-[15px]";
-            } else if (vol < 0.5) {
-                muteIcon.className = "fas fa-volume-down text-gray-300 text-[15px]";
+        playPauseBtn.addEventListener('click', () => {
+            if (tracks.length === 0) return;
+            if (activePlayerType === 'youtube') {
+                if (!ytPlayerReady) return;
+                if (isPlaying) {
+                    ytPlayer.pauseVideo();
+                } else {
+                    ytPlayer.playVideo();
+                }
             } else {
-                muteIcon.className = "fas fa-volume-up text-gray-300 text-[15px]";
-            }
-        }
-
-        muteIcon.addEventListener('click', () => {
-            let currentVol = (activePlayerType === 'youtube' && ytPlayerReady) ? (ytPlayer.getVolume()/100) : audio.volume;
-            if (currentVol > 0) {
-                audio.muted = true;
-                audio.volume = 0;
-                if(ytPlayerReady) { ytPlayer.mute(); ytPlayer.setVolume(0); }
-                updateVolumeUI(0);
-            } else {
-                audio.muted = false;
-                audio.volume = 1;
-                if(ytPlayerReady) { ytPlayer.unMute(); ytPlayer.setVolume(100); }
-                updateVolumeUI(1);
+                if (audio.src) {
+                    if (isPlaying) {
+                        audio.pause();
+                    } else {
+                        audio.play();
+                    }
+                } else {
+                    playTrack(currentTrackId);
+                }
             }
         });
 
         function playNextTrack() {
+            if (tracks.length === 0) return;
             const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
             if (currentIndex !== -1 && currentIndex < tracks.length - 1) {
                 playTrack(tracks[currentIndex + 1].id);
@@ -597,6 +725,7 @@
         }
 
         function playPrevTrack() {
+            if (tracks.length === 0) return;
             const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
             if (currentIndex > 0) {
                 playTrack(tracks[currentIndex - 1].id);
@@ -613,6 +742,18 @@
             const container = document.getElementById('playlist-items');
             container.innerHTML = '';
             
+            if (tracks.length === 0) {
+                container.innerHTML = `
+                    <div class="h-44 flex flex-col items-center justify-center text-center p-4 text-gray-400">
+                        <i class="fas fa-music text-3xl mb-2 text-[#ff9d33]/50"></i>
+                        <p class="text-sm font-medium">কোনো গান নেই</p>
+                        <p class="text-xs text-gray-500 mt-1">উপরে ইউজার আইকনে ক্লিক করে গান যোগ করুন</p>
+                    </div>
+                `;
+                document.getElementById('playlist-main-title').textContent = `${currentPlaylistName.toUpperCase()} (0)`;
+                return;
+            }
+
             tracks.forEach((track, index) => {
                 const num = index + 1;
                 const isActive = track.id === currentTrackId;
@@ -780,11 +921,312 @@
             }
         });
 
-        // Initial setup
-        const initialTrack = allTracks.find(t => t.id === currentTrackId);
-        trackTitleDisplay.textContent = initialTrack.title;
-        trackArtistDisplay.textContent = initialTrack.artist;
-        audio.src = initialTrack.url;
+        // Passcode & Add Song Modal Logic
+        const CORRECT_PASSCODE = "47842828";
+        const passcodeModal = document.getElementById('passcode-modal');
+        const openPasscodeBtn = document.getElementById('open-passcode-modal');
+        const closePasscodeBtn = document.getElementById('close-passcode-modal');
+        const passcodeForm = document.getElementById('passcode-form');
+        const passcodeError = document.getElementById('passcode-error');
+        const inputPasscode = document.getElementById('input-passcode');
+
+        const addModal = document.getElementById('add-modal');
+        const closeAddModalBtn = document.getElementById('close-add-modal');
+        const addSongForm = document.getElementById('add-song-form');
+        const addPlaylistForm = document.getElementById('add-playlist-form');
+        const tabSingleBtn = document.getElementById('tab-single-btn');
+        const tabPlaylistBtn = document.getElementById('tab-playlist-btn');
+        const playlistStatusMsg = document.getElementById('playlist-status-msg');
+        const btnFetchPlaylist = document.getElementById('btn-fetch-playlist');
+
+        tabSingleBtn.addEventListener('click', () => {
+            tabSingleBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all";
+            tabPlaylistBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
+            addSongForm.classList.remove('hidden');
+            addPlaylistForm.classList.add('hidden');
+        });
+
+        tabPlaylistBtn.addEventListener('click', () => {
+            tabPlaylistBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all";
+            tabSingleBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
+            addPlaylistForm.classList.remove('hidden');
+            addSongForm.classList.add('hidden');
+        });
+
+        openPasscodeBtn.addEventListener('click', () => {
+            inputPasscode.value = '';
+            passcodeError.classList.add('hidden');
+            passcodeModal.classList.remove('hidden');
+            setTimeout(() => inputPasscode.focus(), 60);
+        });
+
+        closePasscodeBtn.addEventListener('click', () => {
+            passcodeModal.classList.add('hidden');
+        });
+
+        passcodeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (inputPasscode.value.trim() === CORRECT_PASSCODE) {
+                passcodeModal.classList.add('hidden');
+                addModal.classList.remove('hidden');
+            } else {
+                passcodeError.classList.remove('hidden');
+                inputPasscode.value = '';
+                inputPasscode.focus();
+            }
+        });
+
+        closeAddModalBtn.addEventListener('click', () => addModal.classList.add('hidden'));
+
+        // Handle Single Track Submit
+        addSongForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const url = document.getElementById('input-song-url').value.trim();
+            const title = document.getElementById('input-song-title').value.trim();
+            const artist = document.getElementById('input-song-artist').value.trim();
+            const category = document.getElementById('input-song-category').value;
+
+            const ytId = extractVideoID(url);
+            const isYt = !!ytId;
+
+            const newTrack = {
+                id: 'track_' + Date.now(),
+                title: title,
+                artist: artist,
+                duration: "Live",
+                isYoutube: isYt,
+                ytUrl: isYt ? url : null,
+                url: !isYt ? url : null,
+                image: isYt ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : 'https://placehold.co/150x150/3c1e0a/ffb450?text=Music'
+            };
+
+            if (playlistsData[category]) {
+                playlistsData[category].push(newTrack);
+            }
+            refreshAllTracks();
+            localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
+            selectCategory(category);
+            playTrack(newTrack.id);
+
+            addSongForm.reset();
+            addModal.classList.add('hidden');
+        });
+
+        /* ==========================================================
+           MULTI-TIER BULLETPROOF YOUTUBE PLAYLIST EXTRACTOR
+           ========================================================== */
+
+        // Helper: Video ID থেকে টাইটেল ও আর্টিস্ট ফেচ করা (CORS-friendly NoEmbed API)
+        async function fetchVideoMetadata(videoId) {
+            try {
+                const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`, { signal: AbortSignal.timeout(3000) });
+                if (res.ok) {
+                    const data = await res.json();
+                    return {
+                        title: data.title || "YouTube Track",
+                        artist: data.author_name || "YouTube Music"
+                    };
+                }
+            } catch(e) {}
+            return {
+                title: "YouTube Track (" + videoId + ")",
+                artist: "YouTube Music"
+            };
+        }
+
+        // Tier 1: YouTube Scraper via High-Speed CORS Proxies
+        async function fetchPlaylistViaCORSProxy(playlistId) {
+            const targetUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+            ];
+
+            for (const proxy of proxies) {
+                try {
+                    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+                    if (!res.ok) continue;
+
+                    let html = '';
+                    if (proxy.includes('allorigins')) {
+                        const json = await res.json();
+                        html = json.contents || '';
+                    } else {
+                        html = await res.text();
+                    }
+
+                    if (!html || !html.includes('ytInitialData')) continue;
+
+                    // Extract ytInitialData
+                    const match = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/s) || html.match(/ytInitialData\s*=\s*({.+?});/);
+                    if (match && match[1]) {
+                        const data = JSON.parse(match[1]);
+                        const videos = [];
+                        
+                        // Recursive traverse to find playlistVideoRenderer items
+                        const findVideos = (obj) => {
+                            if (!obj || typeof obj !== 'object') return;
+                            if (obj.playlistVideoRenderer) {
+                                const v = obj.playlistVideoRenderer;
+                                if (v.videoId) {
+                                    videos.push({
+                                        videoId: v.videoId,
+                                        title: v.title?.runs?.[0]?.text || "YouTube Track",
+                                        artist: v.shortBylineText?.runs?.[0]?.text || "YouTube Music",
+                                        duration: v.lengthText?.simpleText || "03:30"
+                                    });
+                                }
+                            }
+                            for (const k in obj) {
+                                findVideos(obj[k]);
+                            }
+                        };
+                        findVideos(data);
+
+                        if (videos.length > 0) return videos;
+                    }
+                } catch(e) {
+                    console.warn("Proxy attempt failed:", proxy, e);
+                }
+            }
+            return null;
+        }
+
+        // Tier 2: YouTube Iframe API Native Playlist Cue Fallback
+        function fetchPlaylistViaIFrame(playlistId) {
+            return new Promise((resolve) => {
+                if (!ytPlayer || typeof ytPlayer.cuePlaylist !== 'function') {
+                    return resolve(null);
+                }
+
+                let attempts = 0;
+                ytPlayer.cuePlaylist({
+                    listType: 'playlist',
+                    list: playlistId
+                });
+
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    try {
+                        const list = ytPlayer.getPlaylist();
+                        if (Array.isArray(list) && list.length > 0) {
+                            clearInterval(checkInterval);
+                            resolve(list);
+                            return;
+                        }
+                    } catch(e) {}
+
+                    if (attempts > 12) { // 3.6 seconds max wait
+                        clearInterval(checkInterval);
+                        resolve(null);
+                    }
+                }, 300);
+            });
+        }
+
+        // Handle Entire YouTube Playlist Submit
+        addPlaylistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const playlistUrl = document.getElementById('input-playlist-url').value.trim();
+            const category = document.getElementById('input-playlist-category').value;
+            const playlistId = extractPlaylistID(playlistUrl);
+
+            if (!playlistId) {
+                alert('সঠিক YouTube Playlist লিংক দিন (লিংকে list=... থাকতে হবে)');
+                return;
+            }
+
+            playlistStatusMsg.classList.remove('hidden', 'text-red-400', 'text-green-400');
+            playlistStatusMsg.classList.add('text-orange-300');
+            playlistStatusMsg.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> ইউটিউব থেকে প্লেলিস্ট তথ্য আনা হচ্ছে...';
+            btnFetchPlaylist.disabled = true;
+            btnFetchPlaylist.classList.add('opacity-50');
+
+            let parsedVideos = [];
+
+            // 1. Try Tier 1 (CORS Scraper)
+            try {
+                parsedVideos = await fetchPlaylistViaCORSProxy(playlistId);
+            } catch(err) {
+                console.warn("Tier 1 failed", err);
+            }
+
+            // 2. If Tier 1 didn't find, Try Tier 2 (YouTube IFrame Native API)
+            if (!parsedVideos || parsedVideos.length === 0) {
+                playlistStatusMsg.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> ব্রাউজার এপিআই দিয়ে গানগুলো লোড করা হচ্ছে...';
+                const videoIdList = await fetchPlaylistViaIFrame(playlistId);
+                
+                if (videoIdList && videoIdList.length > 0) {
+                    playlistStatusMsg.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> ${videoIdList.length}টি গান পাওয়া গেছে, শিরোনাম আনা হচ্ছে...`;
+                    
+                    parsedVideos = [];
+                    for (let i = 0; i < videoIdList.length; i++) {
+                        const vid = videoIdList[i];
+                        const meta = await fetchVideoMetadata(vid);
+                        parsedVideos.push({
+                            videoId: vid,
+                            title: meta.title,
+                            artist: meta.artist,
+                            duration: "Live"
+                        });
+                    }
+                }
+            }
+
+            btnFetchPlaylist.disabled = false;
+            btnFetchPlaylist.classList.remove('opacity-50');
+
+            if (parsedVideos && parsedVideos.length > 0) {
+                playlistStatusMsg.classList.remove('text-orange-300');
+                playlistStatusMsg.classList.add('text-green-400');
+                playlistStatusMsg.innerHTML = `✓ সফলভাবে ${parsedVideos.length}টি গান পাওয়া গেছে! লিস্টে যোগ হচ্ছে...`;
+
+                const formattedTracks = parsedVideos.map((v, idx) => ({
+                    id: 'yt_pl_' + v.videoId + '_' + Date.now() + '_' + idx,
+                    title: v.title,
+                    artist: v.artist,
+                    duration: v.duration || "03:45",
+                    isYoutube: true,
+                    ytUrl: `https://www.youtube.com/watch?v=${v.videoId}`,
+                    image: `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`
+                }));
+
+                // Append all playlist tracks
+                if (!playlistsData[category]) playlistsData[category] = [];
+                playlistsData[category].push(...formattedTracks);
+
+                refreshAllTracks();
+                localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
+
+                setTimeout(() => {
+                    selectCategory(category);
+                    if (formattedTracks.length > 0) {
+                        playTrack(formattedTracks[0].id);
+                    }
+                    addPlaylistForm.reset();
+                    playlistStatusMsg.classList.add('hidden');
+                    addModal.classList.add('hidden');
+                }, 800);
+
+            } else {
+                playlistStatusMsg.classList.remove('text-orange-300');
+                playlistStatusMsg.classList.add('text-red-400');
+                playlistStatusMsg.innerHTML = '❌ প্লেলিস্টটি লোড করা সম্ভব হয়নি। লিংকটি আবার চেক করুন।';
+            }
+        });
+
+        // Initial Setup
+        if (tracks.length > 0) {
+            const initialTrack = tracks[0];
+            trackTitleDisplay.textContent = initialTrack.title;
+            trackArtistDisplay.textContent = initialTrack.artist;
+            if (!initialTrack.isYoutube) {
+                audio.src = initialTrack.url;
+            }
+            if (initialTrack.image) {
+                currentAlbumArt.src = initialTrack.image;
+            }
+        }
         audio.volume = 1; 
         renderPlaylist();
     </script>
