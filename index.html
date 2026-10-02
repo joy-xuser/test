@@ -301,13 +301,16 @@
                 </button>
             </div>
 
-            <!-- Tabs: Single Track vs Full YouTube Playlist -->
-            <div class="flex rounded-xl bg-black/40 p-1 mb-4 border border-white/10">
+            <!-- Tabs: Single Track vs Full YouTube Playlist vs Bulk Links -->
+            <div class="flex rounded-xl bg-black/40 p-1 mb-4 border border-white/10 gap-1">
                 <button type="button" id="tab-single-btn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all">
-                    একক গান (Single)
+                    একক গান
                 </button>
                 <button type="button" id="tab-playlist-btn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">
-                    ইউটিউব প্লেলিস্ট (Full Playlist)
+                    YouTube প্লেলিস্ট
+                </button>
+                <button type="button" id="tab-bulk-btn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">
+                    একাধিক লিংক
                 </button>
             </div>
 
@@ -350,9 +353,9 @@
             <!-- Form 2: Entire YouTube Playlist Import (Multi-Tier Engine) -->
             <form id="add-playlist-form" class="space-y-4 hidden">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube Playlist লিংক</label>
-                    <input type="url" id="input-playlist-url" required placeholder="https://www.youtube.com/playlist?list=PL..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
-                    <p class="text-[11px] text-gray-400 mt-1">পাবলিক বা আনলিস্টেড যে কোনো ইউটিউব প্লেলিস্ট স্বয়ংক্রিয়ভাবে এক্সট্র্যাক্ট হবে।</p>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube Playlist লিংক বা ID</label>
+                    <input type="text" id="input-playlist-url" required placeholder="https://www.youtube.com/playlist?list=PL..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                    <p class="text-[11px] text-gray-400 mt-1">পাবলিক বা আনলিস্টেড ইউটিউব প্লেলিস্টের পুরো লিঙ্ক পেস্ট করুন।</p>
                 </div>
 
                 <div>
@@ -372,6 +375,35 @@
                 <div class="pt-2">
                     <button type="submit" id="btn-fetch-playlist" class="w-full py-3 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
                         <i class="fas fa-cloud-arrow-down"></i> সব গান ফেচ করে যুক্ত করুন
+                    </button>
+                </div>
+            </form>
+
+            <!-- Form 3: Bulk YouTube Links Import -->
+            <form id="add-bulk-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">একাধিক ইউটিউব লিংক (প্রতি লাইনে ১টি)</label>
+                    <textarea id="input-bulk-links" rows="4" required placeholder="https://youtu.be/...&#10;https://www.youtube.com/watch?v=...&#10;https://youtu.be/..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ff9d33] transition-colors"></textarea>
+                    <p class="text-[11px] text-gray-400 mt-1">কয়েকটি গানের লিংক একসাথে পেস্ট করে এক ক্লিকে অ্যাড করুন।</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">কোন ক্যাটাগরিতে যোগ হবে?</label>
+                    <select id="input-bulk-category" class="w-full bg-[#201005] border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors">
+                        <option value="Mahalaya">Mahalaya</option>
+                        <option value="Shasthi" selected>Shasthi</option>
+                        <option value="Saptami">Saptami</option>
+                        <option value="Ashtami">Ashtami</option>
+                        <option value="Navami">Navami</option>
+                        <option value="Dashami">Dashami</option>
+                    </select>
+                </div>
+
+                <div id="bulk-status-msg" class="text-xs text-center py-2.5 px-3 rounded-lg bg-black/40 border border-white/10 hidden font-medium transition-all"></div>
+
+                <div class="pt-2">
+                    <button type="submit" id="btn-fetch-bulk" class="w-full py-3 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i class="fas fa-list-check"></i> সব লিংক ইমপোর্ট করুন
                     </button>
                 </div>
             </form>
@@ -424,6 +456,9 @@
         let activePlayerType = 'html5';
         let ytProgressInterval;
 
+        let currentVolume = 1;
+        let isMuted = false;
+
         let currentPlaylistName = 'All Tracks';
         let tracks = playlistsData[currentPlaylistName];
         let currentTrackId = tracks.length > 0 ? tracks[0].id : null;
@@ -473,6 +508,84 @@
             }
         }
 
+        function startYTProgress() {
+            stopYTProgress();
+            ytProgressInterval = setInterval(() => {
+                if (ytPlayer && activePlayerType === 'youtube' && typeof ytPlayer.getCurrentTime === 'function') {
+                    const curr = ytPlayer.getCurrentTime();
+                    const duration = ytPlayer.getDuration();
+                    if (duration > 0) {
+                        updateProgressBar((curr / duration) * 100);
+                        currentTimeDisplay.textContent = formatTime(curr);
+                        totalTimeDisplay.textContent = formatTime(duration);
+                    }
+                }
+            }, 500);
+        }
+
+        function stopYTProgress() {
+            if (ytProgressInterval) {
+                clearInterval(ytProgressInterval);
+                ytProgressInterval = null;
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || seconds === null || seconds === undefined) return "00:00";
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function setPlayIcon(isPlay) {
+            if (isPlay) {
+                playIcon.classList.remove('fa-play');
+                playIcon.classList.add('fa-pause');
+            } else {
+                playIcon.classList.remove('fa-pause');
+                playIcon.classList.add('fa-play');
+            }
+        }
+
+        function updateProgressBar(percentage) {
+            const clamped = Math.max(0, Math.min(100, percentage));
+            progressFill.style.width = `${clamped}%`;
+            progressThumb.style.left = `${clamped}%`;
+        }
+
+        function updateVolumeUI(vol) {
+            const clamped = Math.max(0, Math.min(1, vol));
+            currentVolume = clamped;
+            volumeFill.style.width = `${clamped * 100}%`;
+            volumeThumb.style.left = `${clamped * 100}%`;
+
+            if (clamped === 0 || isMuted) {
+                muteIcon.className = "fas fa-volume-mute text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
+            } else if (clamped < 0.5) {
+                muteIcon.className = "fas fa-volume-down text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
+            } else {
+                muteIcon.className = "fas fa-volume-up text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
+            }
+        }
+
+        function setVolume(val) {
+            const clamped = Math.max(0, Math.min(1, val));
+            currentVolume = clamped;
+            isMuted = clamped === 0;
+            audio.volume = clamped;
+            audio.muted = isMuted;
+
+            if (ytPlayer && ytPlayerReady && typeof ytPlayer.setVolume === 'function') {
+                if (isMuted) {
+                    ytPlayer.mute();
+                } else {
+                    ytPlayer.unMute();
+                    ytPlayer.setVolume(clamped * 100);
+                }
+            }
+            updateVolumeUI(clamped);
+        }
+
         function onPlayerStateChange(event) {
             if (activePlayerType !== 'youtube') return;
             
@@ -502,425 +615,13 @@
 
         function extractPlaylistID(url) {
             if (!url) return null;
-            const regExp = /[?&]list=([a-zA-Z0-9_-]+)/;
-            const match = url.match(regExp);
-            return match ? match[1] : (url.startsWith('PL') ? url : null);
+            url = url.trim();
+            const match = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) return match[1];
+            const directMatch = url.match(/(PL[a-zA-Z0-9_-]+)/);
+            if (directMatch && directMatch[1]) return directMatch[1];
+            return null;
         }
-
-        function startYTProgress() {
-            stopYTProgress();
-            ytProgressInterval = setInterval(() => {
-                if (ytPlayer && activePlayerType === 'youtube' && typeof ytPlayer.getCurrentTime === 'function') {
-                    const curr = ytPlayer.getCurrentTime();
-                    const duration = ytPlayer.getDuration();
-                    if (duration > 0) {
-                        updateProgressBar((curr / duration) * 100);
-                        currentTimeDisplay.textContent = formatTime(curr);
-                    }
-                }
-            }, 400);
-        }
-
-        function stopYTProgress() {
-            if (ytProgressInterval) clearInterval(ytProgressInterval);
-        }
-
-        function formatTime(seconds) {
-            if (isNaN(seconds) || !seconds) return "00:00";
-            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-        }
-
-        function setPlayIcon(isPlay) {
-            if (isPlay) {
-                playIcon.classList.remove('fa-play');
-                playIcon.classList.add('fa-pause');
-            } else {
-                playIcon.classList.remove('fa-pause');
-                playIcon.classList.add('fa-play');
-            }
-        }
-
-        function updateProgressBar(percentage) {
-            const clamped = Math.max(0, Math.min(100, percentage));
-            progressFill.style.width = `${clamped}%`;
-            progressThumb.style.left = `${clamped}%`;
-        }
-
-        // --- INTERACTIVE SEEK (CLICK + DRAG) ---
-        let isSeeking = false;
-
-        function handleSeek(clientX) {
-            const rect = progressContainer.getBoundingClientRect();
-            let pos = (clientX - rect.left) / rect.width;
-            pos = Math.max(0, Math.min(1, pos));
-            updateProgressBar(pos * 100);
-
-            if (activePlayerType === 'youtube' && ytPlayer && typeof ytPlayer.getDuration === 'function') {
-                const dur = ytPlayer.getDuration();
-                if (dur > 0) {
-                    ytPlayer.seekTo(pos * dur, true);
-                    currentTimeDisplay.textContent = formatTime(pos * dur);
-                }
-            } else if (activePlayerType === 'html5' && !isNaN(audio.duration) && audio.duration > 0) {
-                audio.currentTime = pos * audio.duration;
-                currentTimeDisplay.textContent = formatTime(audio.currentTime);
-            }
-        }
-
-        progressContainer.addEventListener('mousedown', (e) => {
-            isSeeking = true;
-            handleSeek(e.clientX);
-        });
-
-        progressContainer.addEventListener('touchstart', (e) => {
-            isSeeking = true;
-            if (e.touches[0]) handleSeek(e.touches[0].clientX);
-        }, { passive: true });
-
-        // --- INTERACTIVE VOLUME (CLICK + DRAG) ---
-        let currentVolume = 1;
-        let isAdjustingVolume = false;
-
-        function setVolume(pos) {
-            pos = Math.max(0, Math.min(1, pos));
-            currentVolume = pos;
-            audio.volume = pos;
-
-            if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
-                ytPlayer.setVolume(pos * 100);
-                if (pos > 0 && typeof ytPlayer.isMuted === 'function' && ytPlayer.isMuted()) {
-                    ytPlayer.unMute();
-                }
-            }
-            updateVolumeUI(pos);
-        }
-
-        function handleVolumeMove(clientX) {
-            const rect = volumeContainer.getBoundingClientRect();
-            let pos = (clientX - rect.left) / rect.width;
-            setVolume(pos);
-        }
-
-        volumeContainer.addEventListener('mousedown', (e) => {
-            isAdjustingVolume = true;
-            handleVolumeMove(e.clientX);
-        });
-
-        volumeContainer.addEventListener('touchstart', (e) => {
-            isAdjustingVolume = true;
-            if (e.touches[0]) handleVolumeMove(e.touches[0].clientX);
-        }, { passive: true });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isSeeking) handleSeek(e.clientX);
-            if (isAdjustingVolume) handleVolumeMove(e.clientX);
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (!e.touches[0]) return;
-            if (isSeeking) handleSeek(e.touches[0].clientX);
-            if (isAdjustingVolume) handleVolumeMove(e.touches[0].clientX);
-        }, { passive: true });
-
-        window.addEventListener('mouseup', () => {
-            isSeeking = false;
-            isAdjustingVolume = false;
-        });
-
-        window.addEventListener('touchend', () => {
-            isSeeking = false;
-            isAdjustingVolume = false;
-        });
-
-        function updateVolumeUI(vol) {
-            volumeFill.style.width = `${vol * 100}%`;
-            volumeThumb.style.left = `${vol * 100}%`;
-            if (vol === 0) {
-                muteIcon.className = "fas fa-volume-mute text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
-            } else if (vol < 0.5) {
-                muteIcon.className = "fas fa-volume-down text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
-            } else {
-                muteIcon.className = "fas fa-volume-up text-gray-300 text-sm cursor-pointer hover:text-white transition-colors";
-            }
-        }
-
-        muteIcon.addEventListener('click', () => {
-            if (currentVolume > 0) {
-                audio.muted = true;
-                if (ytPlayer && typeof ytPlayer.mute === 'function') ytPlayer.mute();
-                setVolume(0);
-            } else {
-                audio.muted = false;
-                if (ytPlayer && typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
-                setVolume(0.8);
-            }
-        });
-
-        // HTML5 Audio Events
-        audio.addEventListener('play', () => {
-            if(activePlayerType !== 'html5') return;
-            isPlaying = true;
-            setPlayIcon(true);
-            updateActiveTrackUI();
-        });
-
-        audio.addEventListener('pause', () => {
-            if(activePlayerType !== 'html5') return;
-            isPlaying = false;
-            setPlayIcon(false);
-            updateActiveTrackUI();
-        });
-
-        audio.addEventListener('timeupdate', () => {
-            if (activePlayerType !== 'html5') return;
-            if (!isNaN(audio.duration)) {
-                const percentage = (audio.currentTime / audio.duration) * 100;
-                updateProgressBar(percentage);
-                currentTimeDisplay.textContent = formatTime(audio.currentTime);
-            }
-        });
-
-        audio.addEventListener('loadedmetadata', () => {
-            if (activePlayerType === 'html5') {
-                totalTimeDisplay.textContent = formatTime(audio.duration);
-            }
-        });
-
-        audio.addEventListener('ended', () => {
-            if (activePlayerType === 'html5') playNextTrack();
-        });
-
-        playPauseBtn.addEventListener('click', () => {
-            if (tracks.length === 0) return;
-            if (activePlayerType === 'youtube') {
-                if (!ytPlayerReady) return;
-                if (isPlaying) {
-                    ytPlayer.pauseVideo();
-                } else {
-                    ytPlayer.playVideo();
-                }
-            } else {
-                if (audio.src) {
-                    if (isPlaying) {
-                        audio.pause();
-                    } else {
-                        audio.play();
-                    }
-                } else {
-                    playTrack(currentTrackId);
-                }
-            }
-        });
-
-        function playNextTrack() {
-            if (tracks.length === 0) return;
-            const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
-            if (currentIndex !== -1 && currentIndex < tracks.length - 1) {
-                playTrack(tracks[currentIndex + 1].id);
-            } else {
-                playTrack(tracks[0].id);
-            }
-        }
-
-        function playPrevTrack() {
-            if (tracks.length === 0) return;
-            const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
-            if (currentIndex > 0) {
-                playTrack(tracks[currentIndex - 1].id);
-            } else {
-                if (activePlayerType === 'youtube' && ytPlayerReady) ytPlayer.seekTo(0);
-                if (activePlayerType === 'html5') audio.currentTime = 0; 
-            }
-        }
-
-        nextBtn.addEventListener('click', playNextTrack);
-        prevBtn.addEventListener('click', playPrevTrack);
-
-        function renderPlaylist() {
-            const container = document.getElementById('playlist-items');
-            container.innerHTML = '';
-            
-            if (tracks.length === 0) {
-                container.innerHTML = `
-                    <div class="h-44 flex flex-col items-center justify-center text-center p-4 text-gray-400">
-                        <i class="fas fa-music text-3xl mb-2 text-[#ff9d33]/50"></i>
-                        <p class="text-sm font-medium">কোনো গান নেই</p>
-                        <p class="text-xs text-gray-500 mt-1">উপরে ইউজার আইকনে ক্লিক করে গান যোগ করুন</p>
-                    </div>
-                `;
-                document.getElementById('playlist-main-title').textContent = `${currentPlaylistName.toUpperCase()} (0)`;
-                return;
-            }
-
-            tracks.forEach((track, index) => {
-                const num = index + 1;
-                const isActive = track.id === currentTrackId;
-                const item = document.createElement('div');
-                
-                item.className = `playlist-item flex items-center justify-between px-4 py-3 rounded-[12px] cursor-pointer mb-1 group ${isActive ? 'active' : ''}`;
-                item.onclick = () => playTrack(track.id);
-                
-                let ytIcon = track.isYoutube ? '<i class="fab fa-youtube text-red-500 ml-2" title="YouTube Source"></i>' : '';
-
-                item.innerHTML = `
-                    <div class="flex items-center gap-4 min-w-0">
-                        <span class="text-[13px] text-gray-300 w-4 text-center font-medium shrink-0 index-container">${num}</span>
-                        <span class="text-[14px] font-medium ${isActive ? 'text-[#ff9d33]' : 'text-white'} group-hover:${isActive ? 'text-[#ff9d33]' : 'text-white'} transition-colors truncate max-w-[200px] title-container">${track.title} ${ytIcon}</span>
-                    </div>
-                    <div class="flex items-center gap-3 shrink-0">
-                        <span class="text-[12px] text-gray-300 font-medium truncate max-w-[80px]">${track.artist}</span>
-                        <i class="fas fa-play text-[10px] ${isActive ? 'text-[#ff9d33]' : 'text-gray-400 group-hover:text-white'} transition-colors play-icon-container"></i>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-            
-            document.getElementById('playlist-main-title').textContent = `${currentPlaylistName.toUpperCase()} (${tracks.length})`;
-            updateActiveTrackUI();
-        }
-
-        window.playTrack = function(id) {
-            let track = tracks.find(t => t.id === id);
-            if (!track) {
-                for (const listName in playlistsData) {
-                    const found = playlistsData[listName].find(t => t.id === id);
-                    if(found) { track = found; break; }
-                }
-            }
-
-            if (track) {
-                currentTrackId = track.id;
-                
-                updateProgressBar(0);
-                currentTimeDisplay.textContent = "00:00";
-                totalTimeDisplay.textContent = track.duration || "00:00";
-                trackTitleDisplay.textContent = track.title;
-                trackArtistDisplay.textContent = track.artist;
-                currentAlbumArt.src = track.image || 'https://placehold.co/150x150/3c1e0a/ffb450?text=Music';
-                
-                if (track.isYoutube && track.ytUrl) {
-                    activePlayerType = 'youtube';
-                    audio.pause();
-                    audio.currentTime = 0;
-                    
-                    const videoId = extractVideoID(track.ytUrl);
-                    if (videoId) {
-                        const startPlay = () => {
-                            if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-                                ytPlayer.loadVideoById(videoId);
-                                ytPlayer.playVideo();
-                            }
-                        };
-                        
-                        if (ytPlayerReady) {
-                            startPlay();
-                        } else {
-                            const timer = setInterval(() => {
-                                if (ytPlayerReady) {
-                                    clearInterval(timer);
-                                    startPlay();
-                                }
-                            }, 200);
-                        }
-                    }
-                } else {
-                    activePlayerType = 'html5';
-                    if (ytPlayerReady && typeof ytPlayer.pauseVideo === 'function') {
-                        ytPlayer.pauseVideo();
-                    }
-                    stopYTProgress();
-                    
-                    audio.src = track.url;
-                    audio.play().catch(e => console.log("Autoplay blocked."));
-                }
-                
-                renderPlaylist();
-            }
-        };
-
-        function updateActiveTrackUI() {
-            document.querySelectorAll('.playlist-item').forEach((item, index) => {
-                const track = tracks[index];
-                if(!track) return;
-
-                const isActive = track.id === currentTrackId;
-                const indexContainer = item.querySelector('.index-container');
-                const titleContainer = item.querySelector('.title-container');
-                const playIconContainer = item.querySelector('.play-icon-container');
-
-                if (isActive) {
-                    item.classList.add('active');
-                    titleContainer.classList.remove('text-white');
-                    titleContainer.classList.add('text-[#ff9d33]');
-                    playIconContainer.classList.remove('text-gray-400');
-                    playIconContainer.classList.add('text-[#ff9d33]');
-
-                    if (isPlaying) {
-                        indexContainer.innerHTML = `
-                            <div class="flex items-end gap-1 h-3 justify-center w-full">
-                                <div class="w-1 bg-[#ff9d33] rounded-t-sm h-full animate-[bounce_1s_infinite]"></div>
-                                <div class="w-1 bg-[#ff9d33] rounded-t-sm h-2/3 animate-[bounce_1s_infinite_0.2s]"></div>
-                                <div class="w-1 bg-[#ff9d33] rounded-t-sm h-1/2 animate-[bounce_1s_infinite_0.4s]"></div>
-                            </div>
-                        `;
-                    } else {
-                        indexContainer.innerHTML = `${index + 1}`;
-                    }
-                } else {
-                    item.classList.remove('active');
-                    titleContainer.classList.remove('text-[#ff9d33]');
-                    titleContainer.classList.add('text-white');
-                    playIconContainer.classList.remove('text-[#ff9d33]');
-                    playIconContainer.classList.add('text-gray-400');
-                    indexContainer.innerHTML = `${index + 1}`;
-                }
-            });
-        }
-
-        // Drawer and Toggle controls
-        const toggleBtn = document.getElementById('toggle-playlist');
-        const playlistItems = document.getElementById('playlist-items');
-        const playlistIcon = document.getElementById('playlist-icon');
-        const playlistToggleText = document.getElementById('playlist-toggle-text');
-        const playlistContainer = document.getElementById('playlist-container');
-        let isPlaylistVisible = true;
-
-        const categoryDrawer = document.getElementById('playlist-category-drawer');
-        const openCategoryBtn = document.getElementById('open-category-drawer');
-        const closeCategoryBtn = document.getElementById('close-category-drawer');
-
-        openCategoryBtn.addEventListener('click', () => {
-            categoryDrawer.classList.remove('-translate-x-full');
-        });
-
-        closeCategoryBtn.addEventListener('click', () => {
-            categoryDrawer.classList.add('-translate-x-full');
-        });
-
-        window.selectCategory = function(categoryName) {
-            currentPlaylistName = categoryName;
-            tracks = playlistsData[categoryName] || playlistsData['All Tracks'];
-            renderPlaylist();
-            categoryDrawer.classList.add('-translate-x-full');
-        };
-
-        toggleBtn.addEventListener('click', () => {
-            isPlaylistVisible = !isPlaylistVisible;
-            if (isPlaylistVisible) {
-                playlistItems.style.display = 'block';
-                playlistIcon.classList.remove('rotate-180');
-                playlistToggleText.textContent = 'Hide List';
-                playlistContainer.style.height = '60vh';
-            } else {
-                playlistItems.style.display = 'none';
-                playlistIcon.classList.add('rotate-180');
-                playlistToggleText.textContent = 'Show List';
-                playlistContainer.style.height = 'auto';
-            }
-        });
-
         // Passcode & Add Song Modal Logic
         const CORRECT_PASSCODE = "47842828";
         const passcodeModal = document.getElementById('passcode-modal');
@@ -934,23 +635,38 @@
         const closeAddModalBtn = document.getElementById('close-add-modal');
         const addSongForm = document.getElementById('add-song-form');
         const addPlaylistForm = document.getElementById('add-playlist-form');
+        const addBulkForm = document.getElementById('add-bulk-form');
         const tabSingleBtn = document.getElementById('tab-single-btn');
         const tabPlaylistBtn = document.getElementById('tab-playlist-btn');
+        const tabBulkBtn = document.getElementById('tab-bulk-btn');
         const playlistStatusMsg = document.getElementById('playlist-status-msg');
         const btnFetchPlaylist = document.getElementById('btn-fetch-playlist');
+        const bulkStatusMsg = document.getElementById('bulk-status-msg');
+        const btnFetchBulk = document.getElementById('btn-fetch-bulk');
+
+        function resetTabs() {
+            [tabSingleBtn, tabPlaylistBtn, tabBulkBtn].forEach(btn => {
+                btn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
+            });
+            [addSongForm, addPlaylistForm, addBulkForm].forEach(f => f.classList.add('hidden'));
+        }
 
         tabSingleBtn.addEventListener('click', () => {
+            resetTabs();
             tabSingleBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all";
-            tabPlaylistBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
             addSongForm.classList.remove('hidden');
-            addPlaylistForm.classList.add('hidden');
         });
 
         tabPlaylistBtn.addEventListener('click', () => {
+            resetTabs();
             tabPlaylistBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all";
-            tabSingleBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
             addPlaylistForm.classList.remove('hidden');
-            addSongForm.classList.add('hidden');
+        });
+
+        tabBulkBtn.addEventListener('click', () => {
+            resetTabs();
+            tabBulkBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-[#FF8C00] to-[#E65C00] shadow transition-all";
+            addBulkForm.classList.remove('hidden');
         });
 
         openPasscodeBtn.addEventListener('click', () => {
@@ -1013,13 +729,12 @@
         });
 
         /* ==========================================================
-           MULTI-TIER BULLETPROOF YOUTUBE PLAYLIST EXTRACTOR
+           MULTI-INSTANCE BULLETPROOF YOUTUBE PLAYLIST & BULK PARSER
            ========================================================== */
 
-        // Helper: Video ID থেকে টাইটেল ও আর্টিস্ট ফেচ করা (CORS-friendly NoEmbed API)
         async function fetchVideoMetadata(videoId) {
             try {
-                const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`, { signal: AbortSignal.timeout(3000) });
+                const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`, { signal: AbortSignal.timeout(3500) });
                 if (res.ok) {
                     const data = await res.json();
                     return {
@@ -1034,94 +749,64 @@
             };
         }
 
-        // Tier 1: YouTube Scraper via High-Speed CORS Proxies
-        async function fetchPlaylistViaCORSProxy(playlistId) {
-            const targetUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
-            const proxies = [
-                `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
-            ];
+        // Active instances of Invidious & Piped
+        const PLAYLIST_INSTANCES = [
+            { type: 'invidious', url: 'https://inv.nadeko.net/api/v1/playlists/' },
+            { type: 'invidious', url: 'https://invidious.nerdvpn.de/api/v1/playlists/' },
+            { type: 'invidious', url: 'https://invidious.tiekoetter.com/api/v1/playlists/' },
+            { type: 'invidious', url: 'https://yewtu.be/api/v1/playlists/' },
+            { type: 'piped', url: 'https://pipedapi.kavin.rocks/playlists/' },
+            { type: 'piped', url: 'https://api.piped.privacy.com.de/playlists/' },
+            { type: 'piped', url: 'https://pipedapi.leptons.xyz/playlists/' }
+        ];
 
-            for (const proxy of proxies) {
-                try {
-                    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
-                    if (!res.ok) continue;
+        async function fetchPlaylistFromAPIs(playlistId) {
+            for (let i = 0; i < PLAYLIST_INSTANCES.length; i++) {
+                const inst = PLAYLIST_INSTANCES[i];
+                const targetUrl = inst.url + playlistId;
 
-                    let html = '';
-                    if (proxy.includes('allorigins')) {
-                        const json = await res.json();
-                        html = json.contents || '';
-                    } else {
-                        html = await res.text();
+                // Try direct fetch first, then fallback to CORS proxy
+                const fetchUrls = [
+                    targetUrl,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+                ];
+
+                for (const u of fetchUrls) {
+                    try {
+                        playlistStatusMsg.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> সার্ভার ${i + 1}/${PLAYLIST_INSTANCES.length} পরীক্ষা করা হচ্ছে...`;
+                        const res = await fetch(u, { signal: AbortSignal.timeout(4500) });
+                        if (!res.ok) continue;
+
+                        const data = await res.json();
+
+                        // Invidious Schema
+                        if (inst.type === 'invidious' && Array.isArray(data.videos) && data.videos.length > 0) {
+                            return data.videos.map(v => ({
+                                videoId: v.videoId,
+                                title: v.title || "YouTube Track",
+                                artist: v.author || data.author || "YouTube Music",
+                                duration: formatTime(v.lengthSeconds || 210)
+                            }));
+                        }
+
+                        // Piped Schema
+                        if (inst.type === 'piped' && Array.isArray(data.relatedStreams) && data.relatedStreams.length > 0) {
+                            return data.relatedStreams.map(v => {
+                                const vid = (v.url || '').replace('/watch?v=', '');
+                                return {
+                                    videoId: vid,
+                                    title: v.title || "YouTube Track",
+                                    artist: v.uploaderName || data.uploader || "YouTube Music",
+                                    duration: formatTime(v.duration || 210)
+                                };
+                            }).filter(x => !!x.videoId);
+                        }
+                    } catch(err) {
+                        // Continue to next attempt
                     }
-
-                    if (!html || !html.includes('ytInitialData')) continue;
-
-                    // Extract ytInitialData
-                    const match = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/s) || html.match(/ytInitialData\s*=\s*({.+?});/);
-                    if (match && match[1]) {
-                        const data = JSON.parse(match[1]);
-                        const videos = [];
-                        
-                        // Recursive traverse to find playlistVideoRenderer items
-                        const findVideos = (obj) => {
-                            if (!obj || typeof obj !== 'object') return;
-                            if (obj.playlistVideoRenderer) {
-                                const v = obj.playlistVideoRenderer;
-                                if (v.videoId) {
-                                    videos.push({
-                                        videoId: v.videoId,
-                                        title: v.title?.runs?.[0]?.text || "YouTube Track",
-                                        artist: v.shortBylineText?.runs?.[0]?.text || "YouTube Music",
-                                        duration: v.lengthText?.simpleText || "03:30"
-                                    });
-                                }
-                            }
-                            for (const k in obj) {
-                                findVideos(obj[k]);
-                            }
-                        };
-                        findVideos(data);
-
-                        if (videos.length > 0) return videos;
-                    }
-                } catch(e) {
-                    console.warn("Proxy attempt failed:", proxy, e);
                 }
             }
             return null;
-        }
-
-        // Tier 2: YouTube Iframe API Native Playlist Cue Fallback
-        function fetchPlaylistViaIFrame(playlistId) {
-            return new Promise((resolve) => {
-                if (!ytPlayer || typeof ytPlayer.cuePlaylist !== 'function') {
-                    return resolve(null);
-                }
-
-                let attempts = 0;
-                ytPlayer.cuePlaylist({
-                    listType: 'playlist',
-                    list: playlistId
-                });
-
-                const checkInterval = setInterval(() => {
-                    attempts++;
-                    try {
-                        const list = ytPlayer.getPlaylist();
-                        if (Array.isArray(list) && list.length > 0) {
-                            clearInterval(checkInterval);
-                            resolve(list);
-                            return;
-                        }
-                    } catch(e) {}
-
-                    if (attempts > 12) { // 3.6 seconds max wait
-                        clearInterval(checkInterval);
-                        resolve(null);
-                    }
-                }, 300);
-            });
         }
 
         // Handle Entire YouTube Playlist Submit
@@ -1132,46 +817,16 @@
             const playlistId = extractPlaylistID(playlistUrl);
 
             if (!playlistId) {
-                alert('সঠিক YouTube Playlist লিংক দিন (লিংকে list=... থাকতে হবে)');
+                alert('সঠিক YouTube Playlist লিংক দিন (যেমন: https://www.youtube.com/playlist?list=PL...)');
                 return;
             }
 
             playlistStatusMsg.classList.remove('hidden', 'text-red-400', 'text-green-400');
             playlistStatusMsg.classList.add('text-orange-300');
-            playlistStatusMsg.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> ইউটিউব থেকে প্লেলিস্ট তথ্য আনা হচ্ছে...';
             btnFetchPlaylist.disabled = true;
             btnFetchPlaylist.classList.add('opacity-50');
 
-            let parsedVideos = [];
-
-            // 1. Try Tier 1 (CORS Scraper)
-            try {
-                parsedVideos = await fetchPlaylistViaCORSProxy(playlistId);
-            } catch(err) {
-                console.warn("Tier 1 failed", err);
-            }
-
-            // 2. If Tier 1 didn't find, Try Tier 2 (YouTube IFrame Native API)
-            if (!parsedVideos || parsedVideos.length === 0) {
-                playlistStatusMsg.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> ব্রাউজার এপিআই দিয়ে গানগুলো লোড করা হচ্ছে...';
-                const videoIdList = await fetchPlaylistViaIFrame(playlistId);
-                
-                if (videoIdList && videoIdList.length > 0) {
-                    playlistStatusMsg.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> ${videoIdList.length}টি গান পাওয়া গেছে, শিরোনাম আনা হচ্ছে...`;
-                    
-                    parsedVideos = [];
-                    for (let i = 0; i < videoIdList.length; i++) {
-                        const vid = videoIdList[i];
-                        const meta = await fetchVideoMetadata(vid);
-                        parsedVideos.push({
-                            videoId: vid,
-                            title: meta.title,
-                            artist: meta.artist,
-                            duration: "Live"
-                        });
-                    }
-                }
-            }
+            const parsedVideos = await fetchPlaylistFromAPIs(playlistId);
 
             btnFetchPlaylist.disabled = false;
             btnFetchPlaylist.classList.remove('opacity-50');
@@ -1179,7 +834,7 @@
             if (parsedVideos && parsedVideos.length > 0) {
                 playlistStatusMsg.classList.remove('text-orange-300');
                 playlistStatusMsg.classList.add('text-green-400');
-                playlistStatusMsg.innerHTML = `✓ সফলভাবে ${parsedVideos.length}টি গান পাওয়া গেছে! লিস্টে যোগ হচ্ছে...`;
+                playlistStatusMsg.innerHTML = `✓ সফলভাবে ${parsedVideos.length}টি গান পাওয়া গেছে! যুক্ত হচ্ছে...`;
 
                 const formattedTracks = parsedVideos.map((v, idx) => ({
                     id: 'yt_pl_' + v.videoId + '_' + Date.now() + '_' + idx,
@@ -1191,7 +846,6 @@
                     image: `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`
                 }));
 
-                // Append all playlist tracks
                 if (!playlistsData[category]) playlistsData[category] = [];
                 playlistsData[category].push(...formattedTracks);
 
@@ -1211,23 +865,402 @@
             } else {
                 playlistStatusMsg.classList.remove('text-orange-300');
                 playlistStatusMsg.classList.add('text-red-400');
-                playlistStatusMsg.innerHTML = '❌ প্লেলিস্টটি লোড করা সম্ভব হয়নি। লিংকটি আবার চেক করুন।';
+                playlistStatusMsg.innerHTML = '❌ সার্ভার থেকে প্লেলিস্ট পাওয়া যায়নি। উপরের "একাধিক লিংক" ট্যাবে লিংকগুলো পেস্ট করে সরাসরি চেষ্টা করুন।';
             }
         });
+
+        // Handle Bulk Links Submit
+        addBulkForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = document.getElementById('input-bulk-links').value.trim();
+            const category = document.getElementById('input-bulk-category').value;
+
+            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+            const videoIds = [];
+
+            lines.forEach(line => {
+                const vid = extractVideoID(line);
+                if (vid && !videoIds.includes(vid)) {
+                    videoIds.push(vid);
+                }
+            });
+
+            if (videoIds.length === 0) {
+                alert('কোনো সঠিক YouTube ভিডিও লিংক পাওয়া যায়নি!');
+                return;
+            }
+
+            bulkStatusMsg.classList.remove('hidden', 'text-red-400', 'text-green-400');
+            bulkStatusMsg.classList.add('text-orange-300');
+            btnFetchBulk.disabled = true;
+            btnFetchBulk.classList.add('opacity-50');
+
+            const formattedTracks = [];
+            for (let i = 0; i < videoIds.length; i++) {
+                const vid = videoIds[i];
+                bulkStatusMsg.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> গান ${i + 1}/${videoIds.length} তথ্য আনা হচ্ছে...`;
+                const meta = await fetchVideoMetadata(vid);
+                formattedTracks.push({
+                    id: 'yt_bulk_' + vid + '_' + Date.now() + '_' + i,
+                    title: meta.title,
+                    artist: meta.artist,
+                    duration: "Live",
+                    isYoutube: true,
+                    ytUrl: `https://www.youtube.com/watch?v=${vid}`,
+                    image: `https://img.youtube.com/vi/${vid}/hqdefault.jpg`
+                });
+            }
+
+            if (!playlistsData[category]) playlistsData[category] = [];
+            playlistsData[category].push(...formattedTracks);
+
+            refreshAllTracks();
+            localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
+
+            bulkStatusMsg.classList.remove('text-orange-300');
+            bulkStatusMsg.classList.add('text-green-400');
+            bulkStatusMsg.innerHTML = `✓ ${formattedTracks.length}টি গান সফলভাবে যোগ করা হয়েছে!`;
+
+            btnFetchBulk.disabled = false;
+            btnFetchBulk.classList.remove('opacity-50');
+
+            setTimeout(() => {
+                selectCategory(category);
+                if (formattedTracks.length > 0) {
+                    playTrack(formattedTracks[0].id);
+                }
+                addBulkForm.reset();
+                bulkStatusMsg.classList.add('hidden');
+                addModal.classList.add('hidden');
+            }, 800);
+        });
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlist-items');
+            if (!container) return;
+            container.innerHTML = '';
+
+            tracks = playlistsData[currentPlaylistName] || [];
+
+            if (tracks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-gray-400 text-xs">
+                        <i class="fas fa-music text-2xl mb-2 opacity-50 block"></i>
+                        কোনো গান নেই। ওপরের বাটনে ক্লিক করে গান যোগ করুন।
+                    </div>
+                `;
+            } else {
+                tracks.forEach((track, index) => {
+                    const num = index + 1;
+                    const isActive = track.id === currentTrackId;
+                    const item = document.createElement('div');
+
+                    item.className = `playlist-item flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer mb-1 group ${isActive ? 'active' : ''}`;
+                    item.onclick = () => playTrack(track.id);
+
+                    const ytIcon = track.isYoutube ? '<i class="fab fa-youtube text-red-500 ml-1.5 text-xs"></i>' : '';
+
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-xs text-gray-400 w-4 text-center font-medium shrink-0 index-container">${num}</span>
+                            <span class="text-xs font-medium ${isActive ? 'text-[#ff9d33]' : 'text-white'} group-hover:${isActive ? 'text-[#ff9d33]' : 'text-white'} transition-colors truncate max-w-[170px] title-container">${track.title} ${ytIcon}</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-[11px] text-gray-400 font-medium truncate max-w-[85px]">${track.artist}</span>
+                            <i class="fas fa-play text-[9px] ${isActive ? 'text-[#ff9d33]' : 'text-gray-400 group-hover:text-white'} transition-colors play-icon-container"></i>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            const titleEl = document.getElementById('playlist-main-title');
+            if (titleEl) {
+                titleEl.textContent = `${currentPlaylistName.toUpperCase()} (${tracks.length})`;
+            }
+
+            updateActiveTrackUI();
+        }
+
+        function updateActiveTrackUI() {
+            document.querySelectorAll('.playlist-item').forEach((item, index) => {
+                const track = tracks[index];
+                if (!track) return;
+
+                const isActive = track.id === currentTrackId;
+                const indexContainer = item.querySelector('.index-container');
+                const titleContainer = item.querySelector('.title-container');
+                const playIconContainer = item.querySelector('.play-icon-container');
+
+                if (isActive) {
+                    item.classList.add('active');
+                    if (titleContainer) {
+                        titleContainer.classList.remove('text-white');
+                        titleContainer.classList.add('text-[#ff9d33]');
+                    }
+                    if (playIconContainer) {
+                        playIconContainer.classList.remove('text-gray-400');
+                        playIconContainer.classList.add('text-[#ff9d33]');
+                        playIconContainer.className = `fas ${isPlaying ? 'fa-pause' : 'fa-play'} text-[9px] text-[#ff9d33] transition-colors play-icon-container`;
+                    }
+
+                    if (isPlaying && indexContainer) {
+                        indexContainer.innerHTML = `
+                            <div class="flex items-end gap-0.5 h-3 justify-center w-full">
+                                <div class="w-0.5 bg-[#ff9d33] rounded-t-sm h-full animate-[bounce_0.8s_infinite]"></div>
+                                <div class="w-0.5 bg-[#ff9d33] rounded-t-sm h-2/3 animate-[bounce_0.8s_infinite_0.2s]"></div>
+                                <div class="w-0.5 bg-[#ff9d33] rounded-t-sm h-1/2 animate-[bounce_0.8s_infinite_0.4s]"></div>
+                            </div>
+                        `;
+                    } else if (indexContainer) {
+                        indexContainer.innerHTML = `${index + 1}`;
+                    }
+                } else {
+                    item.classList.remove('active');
+                    if (titleContainer) {
+                        titleContainer.classList.remove('text-[#ff9d33]');
+                        titleContainer.classList.add('text-white');
+                    }
+                    if (playIconContainer) {
+                        playIconContainer.className = "fas fa-play text-[9px] text-gray-400 group-hover:text-white transition-colors play-icon-container";
+                    }
+                    if (indexContainer) {
+                        indexContainer.innerHTML = `${index + 1}`;
+                    }
+                }
+            });
+        }
+
+        window.playTrack = function(id) {
+            let track = tracks.find(t => t.id === id);
+            if (!track) {
+                for (const listName in playlistsData) {
+                    const found = playlistsData[listName].find(t => t.id === id);
+                    if (found) {
+                        track = found;
+                        break;
+                    }
+                }
+            }
+
+            if (track) {
+                currentTrackId = track.id;
+
+                updateProgressBar(0);
+                currentTimeDisplay.textContent = "00:00";
+                totalTimeDisplay.textContent = track.duration || "00:00";
+                trackTitleDisplay.textContent = track.title;
+                trackArtistDisplay.textContent = track.artist;
+                currentAlbumArt.src = track.image || 'https://placehold.co/150x150/3c1e0a/ffb450?text=Music';
+
+                if (track.isYoutube && (track.ytUrl || track.id)) {
+                    activePlayerType = 'youtube';
+                    audio.pause();
+
+                    const videoId = extractVideoID(track.ytUrl) || track.id.replace('yt_pl_', '').replace('yt_bulk_', '').split('_')[0];
+                    if (ytPlayerReady && ytPlayer && typeof ytPlayer.loadVideoById === 'function' && videoId) {
+                        ytPlayer.loadVideoById(videoId);
+                        ytPlayer.playVideo();
+                    }
+                } else if (track.url) {
+                    activePlayerType = 'html5';
+                    if (ytPlayer && ytPlayerReady && typeof ytPlayer.pauseVideo === 'function') {
+                        ytPlayer.pauseVideo();
+                    }
+                    stopYTProgress();
+
+                    audio.src = track.url;
+                    audio.play().catch(e => console.log("Autoplay waiting for user gesture.", e));
+                }
+
+                renderPlaylist();
+            }
+        };
+
+        function playNextTrack() {
+            if (tracks.length === 0) return;
+            const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
+            if (currentIndex !== -1 && currentIndex < tracks.length - 1) {
+                playTrack(tracks[currentIndex + 1].id);
+            } else {
+                playTrack(tracks[0].id);
+            }
+        }
+
+        function playPrevTrack() {
+            if (tracks.length === 0) return;
+            const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
+            if (currentIndex > 0) {
+                playTrack(tracks[currentIndex - 1].id);
+            } else {
+                if (activePlayerType === 'youtube' && ytPlayerReady && typeof ytPlayer.seekTo === 'function') {
+                    ytPlayer.seekTo(0, true);
+                } else if (activePlayerType === 'html5') {
+                    audio.currentTime = 0;
+                }
+            }
+        }
+
+        window.selectCategory = function(categoryName) {
+            currentPlaylistName = categoryName;
+            tracks = playlistsData[categoryName] || playlistsData['All Tracks'] || [];
+            renderPlaylist();
+            const drawer = document.getElementById('playlist-category-drawer');
+            if (drawer) {
+                drawer.classList.add('-translate-x-full');
+            }
+        };
+
+        playPauseBtn.addEventListener('click', () => {
+            if (!currentTrackId && tracks.length > 0) {
+                playTrack(tracks[0].id);
+                return;
+            }
+
+            if (activePlayerType === 'youtube') {
+                if (!ytPlayerReady || !ytPlayer) return;
+                if (isPlaying) {
+                    ytPlayer.pauseVideo();
+                } else {
+                    ytPlayer.playVideo();
+                }
+            } else {
+                if (audio.src) {
+                    if (isPlaying) {
+                        audio.pause();
+                    } else {
+                        audio.play();
+                    }
+                } else if (tracks.length > 0) {
+                    playTrack(tracks[0].id);
+                }
+            }
+        });
+
+        nextBtn.addEventListener('click', playNextTrack);
+        prevBtn.addEventListener('click', playPrevTrack);
+
+        // HTML5 Audio Events
+        audio.addEventListener('play', () => {
+            if (activePlayerType !== 'html5') return;
+            isPlaying = true;
+            setPlayIcon(true);
+            updateActiveTrackUI();
+        });
+
+        audio.addEventListener('pause', () => {
+            if (activePlayerType !== 'html5') return;
+            isPlaying = false;
+            setPlayIcon(false);
+            updateActiveTrackUI();
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            if (activePlayerType !== 'html5') return;
+            if (!isNaN(audio.duration) && audio.duration > 0) {
+                const percentage = (audio.currentTime / audio.duration) * 100;
+                updateProgressBar(percentage);
+                currentTimeDisplay.textContent = formatTime(audio.currentTime);
+                totalTimeDisplay.textContent = formatTime(audio.duration);
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            if (activePlayerType === 'html5') playNextTrack();
+        });
+
+        // Progress Bar Seeking
+        function seekAudio(e) {
+            const rect = progressContainer.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+
+            if (activePlayerType === 'youtube' && ytPlayerReady && typeof ytPlayer.getDuration === 'function') {
+                const dur = ytPlayer.getDuration();
+                if (dur > 0) {
+                    ytPlayer.seekTo(pos * dur, true);
+                    updateProgressBar(pos * 100);
+                }
+            } else if (activePlayerType === 'html5' && !isNaN(audio.duration) && audio.duration > 0) {
+                audio.currentTime = pos * audio.duration;
+                updateProgressBar(pos * 100);
+            }
+        }
+
+        progressContainer.addEventListener('click', seekAudio);
+
+        // Volume Bar Seeking
+        function handleVolumeSeek(e) {
+            const rect = volumeContainer.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            setVolume(pos);
+        }
+
+        volumeContainer.addEventListener('click', handleVolumeSeek);
+
+        muteIcon.addEventListener('click', () => {
+            if (isMuted || currentVolume === 0) {
+                setVolume(0.8);
+            } else {
+                setVolume(0);
+            }
+        });
+
+        // Category Drawer Toggles
+        const categoryDrawer = document.getElementById('playlist-category-drawer');
+        const openCategoryBtn = document.getElementById('open-category-drawer');
+        const closeCategoryBtn = document.getElementById('close-category-drawer');
+
+        if (openCategoryBtn && categoryDrawer) {
+            openCategoryBtn.addEventListener('click', () => {
+                categoryDrawer.classList.remove('-translate-x-full');
+            });
+        }
+
+        if (closeCategoryBtn && categoryDrawer) {
+            closeCategoryBtn.addEventListener('click', () => {
+                categoryDrawer.classList.add('-translate-x-full');
+            });
+        }
+
+        // Playlist Hide / Show Toggle
+        const toggleBtn = document.getElementById('toggle-playlist');
+        const playlistItems = document.getElementById('playlist-items');
+        const playlistIcon = document.getElementById('playlist-icon');
+        const playlistToggleText = document.getElementById('playlist-toggle-text');
+        const playlistContainer = document.getElementById('playlist-container');
+        let isPlaylistVisible = true;
+
+        if (toggleBtn && playlistItems) {
+            toggleBtn.addEventListener('click', () => {
+                isPlaylistVisible = !isPlaylistVisible;
+                if (isPlaylistVisible) {
+                    playlistItems.style.display = 'block';
+                    if (playlistIcon) playlistIcon.classList.remove('rotate-180');
+                    if (playlistToggleText) playlistToggleText.textContent = 'Hide List';
+                    if (playlistContainer) playlistContainer.style.height = '60vh';
+                } else {
+                    playlistItems.style.display = 'none';
+                    if (playlistIcon) playlistIcon.classList.add('rotate-180');
+                    if (playlistToggleText) playlistToggleText.textContent = 'Show List';
+                    if (playlistContainer) playlistContainer.style.height = 'auto';
+                }
+            });
+        }
 
         // Initial Setup
         if (tracks.length > 0) {
             const initialTrack = tracks[0];
+            currentTrackId = initialTrack.id;
             trackTitleDisplay.textContent = initialTrack.title;
             trackArtistDisplay.textContent = initialTrack.artist;
-            if (!initialTrack.isYoutube) {
+            if (!initialTrack.isYoutube && initialTrack.url) {
                 audio.src = initialTrack.url;
             }
             if (initialTrack.image) {
                 currentAlbumArt.src = initialTrack.image;
             }
         }
-        audio.volume = 1; 
+        setVolume(1);
         renderPlaylist();
     </script>
 </body>
