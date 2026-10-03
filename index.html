@@ -237,29 +237,29 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD SONG POPUP -->
+    <!-- MODAL: ADD SONG / PLAYLIST POPUP -->
     <div id="add-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="golden-glass w-full max-w-md rounded-3xl p-6 border border-[#ffaa3c]/40 shadow-2xl relative">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-[#ffb866] flex items-center gap-2">
-                    <i class="fas fa-layer-group"></i> গান যোগ করুন
+                    <i class="fas fa-layer-group"></i> গান / প্লেলিস্ট যোগ করুন
                 </h3>
                 <button id="close-add-modal" class="text-gray-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- Backend Config Input -->
-            <div class="mb-4 p-3 bg-black/40 rounded-xl border border-white/10">
-                <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Render Backend URL</label>
-                <input type="url" id="input-backend-url" placeholder="https://backendtest-4hjb.onrender.com" class="w-full bg-black/60 border border-white/20 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#ff9d33]">
-                <p class="text-[10px] text-gray-400 mt-1">আপনার রেন্ডার ব্যাকএন্ড লিংক সেভ রয়েছে।</p>
+            <!-- Tab Switcher: Single vs Full Playlist -->
+            <div class="flex bg-black/50 p-1 rounded-xl mb-4 border border-white/10">
+                <button type="button" id="tab-single" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#FF8C00] text-white transition-all">একক গান (Single)</button>
+                <button type="button" id="tab-playlist" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">ইউটিউব প্লেলিস্ট (Full Playlist)</button>
             </div>
 
             <form id="add-song-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube বা MP3 লিংক</label>
+                    <label id="url-label" class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube বা MP3 লিংক</label>
                     <input type="url" id="input-song-url" required placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33]">
+                    <p id="url-hint" class="text-[10px] text-gray-400 mt-1">একক গানের লিংক দিন</p>
                 </div>
 
                 <div>
@@ -275,7 +275,7 @@
                 </div>
 
                 <div id="fetch-loader" class="text-xs text-center py-2 text-orange-400 hidden">
-                    <i class="fas fa-spinner fa-spin mr-1"></i> ব্যাকএন্ড থেকে তথ্য আনা হচ্ছে...
+                    <i class="fas fa-spinner fa-spin mr-1"></i> <span id="loader-msg">ব্যাকএন্ড থেকে তথ্য আনা হচ্ছে...</span>
                 </div>
 
                 <div class="pt-2">
@@ -289,22 +289,9 @@
 
     <script>
         /* ==========================================================
-           রেন্ডার ব্যাকএন্ড কনফিগারেশন (আপনার লাইভ লিঙ্ক যুক্ত করা হয়েছে)
+           রেন্ডার ব্যাকএন্ড কনফিগারেশন
            ========================================================== */
-        let BACKEND_URL = localStorage.getItem('agomoni_backend_url') || 'https://backendtest-4hjb.onrender.com';
-
-        const backendUrlInput = document.getElementById('input-backend-url');
-        if (backendUrlInput) {
-            backendUrlInput.value = BACKEND_URL;
-            backendUrlInput.addEventListener('change', (e) => {
-                let val = e.target.value.trim().replace(/\/$/, '');
-                if (val) {
-                    BACKEND_URL = val;
-                    localStorage.setItem('agomoni_backend_url', val);
-                    checkBackendStatus();
-                }
-            });
-        }
+        let BACKEND_URL = 'https://backendtest-4hjb.onrender.com';
 
         // সার্ভার হেলথ চেক
         async function checkBackendStatus() {
@@ -470,7 +457,6 @@
 
             artLoader.classList.remove('hidden');
 
-            // অডিও স্ট্রিমিং লিঙ্ক নির্ধারণ
             let streamUrl = track.url;
             if (track.isYoutube) {
                 streamUrl = `${BACKEND_URL}/stream?url=${encodeURIComponent(track.ytUrl)}`;
@@ -559,7 +545,6 @@
         nextBtn.addEventListener('click', playNextTrack);
         prevBtn.addEventListener('click', playPrevTrack);
 
-        // Progress seek
         progressContainer.addEventListener('click', (e) => {
             const rect = progressContainer.getBoundingClientRect();
             const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -568,7 +553,6 @@
             }
         });
 
-        // Volume seek
         volumeContainer.addEventListener('click', (e) => {
             const rect = volumeContainer.getBoundingClientRect();
             const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -579,7 +563,6 @@
             setVolume(audio.volume > 0 ? 0 : 0.85);
         });
 
-        // শাফেল ও লুপ
         shuffleBtn.addEventListener('click', () => {
             isShuffle = !isShuffle;
             shuffleBtn.className = isShuffle 
@@ -602,7 +585,6 @@
             }
         });
 
-        // প্লেলিস্ট রেন্ডার
         function renderPlaylist() {
             const container = document.getElementById('playlist-items');
             if (!container) return;
@@ -654,7 +636,6 @@
             });
         }
 
-        // ক্যাটাগরি মেনু
         const categoryDrawer = document.getElementById('playlist-category-drawer');
         document.getElementById('open-category-drawer').addEventListener('click', () => categoryDrawer.classList.remove('-translate-x-full'));
         document.getElementById('close-category-drawer').addEventListener('click', () => categoryDrawer.classList.add('-translate-x-full'));
@@ -666,7 +647,6 @@
             categoryDrawer.classList.add('-translate-x-full');
         };
 
-        // টগল প্লেলিস্ট
         const toggleBtn = document.getElementById('toggle-playlist');
         const playlistItems = document.getElementById('playlist-items');
         const playlistIcon = document.getElementById('playlist-icon');
@@ -710,65 +690,119 @@
             }
         });
 
-        // গান যোগ করার ফর্ম সাবমিট
+        // ট্যাব সুইচিং (Single Track vs Playlist)
+        let isPlaylistMode = false;
+        const tabSingle = document.getElementById('tab-single');
+        const tabPlaylist = document.getElementById('tab-playlist');
+        const urlLabel = document.getElementById('url-label');
+        const inputSongUrl = document.getElementById('input-song-url');
+        const urlHint = document.getElementById('url-hint');
+        const btnSaveSong = document.getElementById('btn-save-song');
+
+        tabSingle.addEventListener('click', () => {
+            isPlaylistMode = false;
+            tabSingle.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#FF8C00] text-white transition-all";
+            tabPlaylist.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
+            urlLabel.textContent = "YouTube বা MP3 লিংক";
+            inputSongUrl.placeholder = "https://www.youtube.com/watch?v=...";
+            urlHint.textContent = "একক গানের লিংক দিন";
+            btnSaveSong.textContent = "বিজ্ঞাপন ছাড়া সেভ ও প্লে করুন";
+        });
+
+        tabPlaylist.addEventListener('click', () => {
+            isPlaylistMode = true;
+            tabPlaylist.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#FF8C00] text-white transition-all";
+            tabSingle.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
+            urlLabel.textContent = "YouTube Playlist লিংক";
+            inputSongUrl.placeholder = "https://www.youtube.com/playlist?list=...";
+            urlHint.textContent = "প্লেলিস্টের সব গান স্বয়ংক্রিয়ভাবে তালিকায় যুক্ত হবে";
+            btnSaveSong.textContent = "পুরো প্লেলিস্ট ফেচ করে যুক্ত করুন";
+        });
+
+        // গান বা প্লেলিস্ট যোগ করার ফর্ম সাবমিট
         const addSongForm = document.getElementById('add-song-form');
         const fetchLoader = document.getElementById('fetch-loader');
-        const btnSaveSong = document.getElementById('btn-save-song');
+        const loaderMsg = document.getElementById('loader-msg');
 
         addSongForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const songUrl = document.getElementById('input-song-url').value.trim();
+            const songUrl = inputSongUrl.value.trim();
             const category = document.getElementById('input-song-category').value;
-
-            const isYt = /(?:youtu\.be\/|youtube\.com)/.test(songUrl);
 
             fetchLoader.classList.remove('hidden');
             btnSaveSong.disabled = true;
 
-            let meta = {
-                title: "নতুন ট্র্যাক",
-                artist: "অজানা শিল্পী",
-                thumbnail: "https://placehold.co/150x150/3c1e0a/ffb450?text=Music"
-            };
+            if (!playlistsData[category]) playlistsData[category] = [];
 
-            // যদি ইউটিউব হয়, ব্যাকএন্ড থেকে মেটাডাটা এনে স্বয়ংক্রিয়ভাবে সাজানো
-            if (isYt) {
+            // মোড ১: পুরো প্লেলিস্ট যোগ করা
+            if (isPlaylistMode) {
+                loaderMsg.textContent = "প্লেলিস্ট থেকে সব গান লোড হচ্ছে... (কিছু সময় লাগতে পারে)";
                 try {
-                    const res = await fetch(`${BACKEND_URL}/info?url=${encodeURIComponent(songUrl)}`, { signal: AbortSignal.timeout(12000) });
+                    const res = await fetch(`${BACKEND_URL}/playlist?url=${encodeURIComponent(songUrl)}`, { signal: AbortSignal.timeout(35000) });
                     if (res.ok) {
                         const data = await res.json();
-                        meta.title = data.title;
-                        meta.artist = data.artist;
-                        meta.thumbnail = data.thumbnail;
+                        if (data.tracks && data.tracks.length > 0) {
+                            playlistsData[category].push(...data.tracks);
+                            refreshAllTracks();
+                            localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
+                            alert(`${data.tracks.length} টি গান সফলভাবে "${category}" ক্যাটাগরিতে যোগ হয়েছে!`);
+                            selectCategory(category);
+                            playTrack(data.tracks[0].id);
+                        } else {
+                            alert("প্লেলিস্টে কোনো গান পাওয়া যায়নি!");
+                        }
+                    } else {
+                        alert("প্লেলিস্ট ফেচ করতে সমস্যা হয়েছে। প্লেলিস্টটি পাবলিক কিনা চেক করুন।");
                     }
-                } catch(e) {
-                    console.warn("Metadata fetch error:", e);
+                } catch (err) {
+                    alert("সার্ভার রেসপন্স করছে না। কিছুক্ষণ পর আবার চেষ্টা করুন।");
                 }
+            } 
+            // মোড ২: একক গান যোগ করা
+            else {
+                loaderMsg.textContent = "গানের তথ্য আনা হচ্ছে...";
+                const isYt = /(?:youtu\.be\/|youtube\.com)/.test(songUrl);
+                let meta = {
+                    title: "নতুন ট্র্যাক",
+                    artist: "অজানা শিল্পী",
+                    thumbnail: "https://placehold.co/150x150/3c1e0a/ffb450?text=Music"
+                };
+
+                if (isYt) {
+                    try {
+                        const res = await fetch(`${BACKEND_URL}/info?url=${encodeURIComponent(songUrl)}`, { signal: AbortSignal.timeout(15000) });
+                        if (res.ok) {
+                            const data = await res.json();
+                            meta.title = data.title;
+                            meta.artist = data.artist;
+                            meta.thumbnail = data.thumbnail;
+                        }
+                    } catch(e) {}
+                }
+
+                const newTrack = {
+                    id: 'track_' + Date.now(),
+                    title: meta.title,
+                    artist: meta.artist,
+                    duration: "Stream",
+                    isYoutube: isYt,
+                    ytUrl: isYt ? songUrl : null,
+                    url: !isYt ? songUrl : null,
+                    image: meta.thumbnail
+                };
+
+                playlistsData[category].push(newTrack);
+                refreshAllTracks();
+                localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
+
+                selectCategory(category);
+                playTrack(newTrack.id);
             }
-
-            const newTrack = {
-                id: 'track_' + Date.now(),
-                title: meta.title,
-                artist: meta.artist,
-                duration: "Stream",
-                isYoutube: isYt,
-                ytUrl: isYt ? songUrl : null,
-                url: !isYt ? songUrl : null,
-                image: meta.thumbnail
-            };
-
-            if (!playlistsData[category]) playlistsData[category] = [];
-            playlistsData[category].push(newTrack);
-            refreshAllTracks();
-            localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
 
             fetchLoader.classList.add('hidden');
             btnSaveSong.disabled = false;
             addSongForm.reset();
             addModal.classList.add('hidden');
-
-            selectCategory(category);
-            playTrack(newTrack.id);
         });
 
         // ডিফল্ট ট্র্যাক লোড করা
