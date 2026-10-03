@@ -316,7 +316,7 @@
         checkBackendStatus();
 
         /* ==========================================================
-           প্লেলিস্ট ডাটা
+           প্লেলিস্ট ডাটা (সক্রিয় ও ভেরিফাইড লিঙ্কযুক্ত)
            ========================================================== */
         const defaultTracks = {
             'Mahalaya': [
@@ -326,7 +326,7 @@
                     artist: "বীরেন্দ্রকৃষ্ণ ভদ্র (Birendra Krishna Bhadra)",
                     duration: "Live",
                     isYoutube: true,
-                    ytUrl: "https://www.youtube.com/watch?v=0k5X2B10U60",
+                    ytUrl: "https://www.youtube.com/watch?v=YQyo8QeoYhc",
                     image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop"
                 }
             ],
@@ -478,6 +478,16 @@
             updateActiveTrackUI();
             renderPlaylist();
         };
+
+        // অডিও এরর হ্যান্ডলার
+        audio.addEventListener('error', (e) => {
+            artLoader.classList.add('hidden');
+            isPlaying = false;
+            setPlayIcon(false);
+            console.error("Audio error details:", audio.error);
+            document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-red-500";
+            document.getElementById('status-text').textContent = "অডিও লোড হতে সমস্যা হয়েছে। ব্যাকএন্ড চেক করুন।";
+        });
 
         playPauseBtn.addEventListener('click', () => {
             if (!audio.src) {
@@ -690,7 +700,7 @@
             }
         });
 
-        // ট্যাব সুইচিং (Single Track vs Playlist)
+        // ট্যাব সুইচিং
         let isPlaylistMode = false;
         const tabSingle = document.getElementById('tab-single');
         const tabPlaylist = document.getElementById('tab-playlist');
@@ -734,7 +744,6 @@
 
             if (!playlistsData[category]) playlistsData[category] = [];
 
-            // মোড ১: পুরো প্লেলিস্ট যোগ করা
             if (isPlaylistMode) {
                 loaderMsg.textContent = "প্লেলিস্ট থেকে সব গান লোড হচ্ছে... (কিছু সময় লাগতে পারে)";
                 try {
@@ -757,9 +766,7 @@
                 } catch (err) {
                     alert("সার্ভার রেসপন্স করছে না। কিছুক্ষণ পর আবার চেষ্টা করুন।");
                 }
-            } 
-            // মোড ২: একক গান যোগ করা
-            else {
+            } else {
                 loaderMsg.textContent = "গানের তথ্য আনা হচ্ছে...";
                 const isYt = /(?:youtu\.be\/|youtube\.com)/.test(songUrl);
                 let meta = {
