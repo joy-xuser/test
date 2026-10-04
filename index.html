@@ -935,4 +935,41 @@
                     } catch(e) {}
                 }
 
-                const
+                const newTrack = {
+                    id: (isYt ? 'yt_' : 'mp3_') + Date.now(),
+                    title: meta.title,
+                    artist: meta.artist,
+                    duration: "Live",
+                    isYoutube: isYt,
+                    ytId: ytId || null,
+                    ytUrl: isYt ? songUrl : null,
+                    url: isYt ? null : songUrl,
+                    image: meta.thumbnail
+                };
+
+                playlistsData[category].push(newTrack);
+                refreshAllTracks();
+                localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
+
+                // Background cloud sync to backend
+                fetch(`${BACKEND_URL}/api/tracks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category: category, tracks: [newTrack] })
+                }).catch(() => {});
+
+                selectCategory(category);
+                playTrack(newTrack.id);
+            }
+
+            fetchLoader.classList.add('hidden');
+            btnSaveSong.disabled = false;
+            addModal.classList.add('hidden');
+            inputSongUrl.value = '';
+        });
+
+        // Initialize default playlist rendering on load
+        renderPlaylist();
+    </script>
+</body>
+</html>
