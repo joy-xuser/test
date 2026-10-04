@@ -66,7 +66,7 @@
 </head>
 <body>
 
-    <!-- Native HTML5 Audio Element (100% Ad-Free, Direct Audio Stream) -->
+    <!-- Native HTML5 Audio Element (100% Ad-Free Direct Stream) -->
     <audio id="native-audio" preload="auto"></audio>
 
     <div class="absolute inset-0 bg-black/25 z-0 pointer-events-none"></div>
@@ -310,13 +310,13 @@
                 }
             } catch(e) {
                 dot.className = "w-2 h-2 rounded-full bg-orange-400 animate-pulse";
-                text.textContent = "সার্ভার স্লিপে আছে (প্রথম ক্লিকে ২০-৩০ সেকেন্ড লাগতে পারে)";
+                text.textContent = "সার্ভার প্রস্তুত হচ্ছে (একটু সময় লাগতে পারে)...";
             }
         }
         checkBackendStatus();
 
         /* ==========================================================
-           প্লেলিস্ট ডাটা (সক্রিয় ও ভেরিফাইড লিঙ্কযুক্ত)
+           প্লেলিস্ট ডাটা
            ========================================================== */
         const defaultTracks = {
             'Mahalaya': [
@@ -380,7 +380,7 @@
         refreshAllTracks();
 
         /* ==========================================================
-           অডিও প্লেয়ার ইঞ্জিন (HTML5 Native Streamer)
+           অডিও প্লেয়ার ইঞ্জিন
            ========================================================== */
         const audio = document.getElementById('native-audio');
         let currentPlaylistName = 'All Tracks';
@@ -437,7 +437,10 @@
             muteIcon.className = clamped === 0 ? "fas fa-volume-mute text-gray-300 text-sm cursor-pointer" : "fas fa-volume-up text-gray-300 text-sm cursor-pointer";
         }
 
+        let fallbackAttempted = false;
+
         window.playTrack = function(id) {
+            fallbackAttempted = false;
             let track = tracks.find(t => t.id === id);
             if (!track) {
                 for (const cat in playlistsData) {
@@ -456,6 +459,7 @@
             if (track.image) currentAlbumArt.src = track.image;
 
             artLoader.classList.remove('hidden');
+            document.getElementById('status-text').textContent = "অডিও কানেক্ট হচ্ছে...";
 
             let streamUrl = track.url;
             if (track.isYoutube) {
@@ -469,24 +473,57 @@
                 setPlayIcon(true);
                 artLoader.classList.add('hidden');
                 document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]";
-                document.getElementById('status-text').textContent = "সার্ভার অনলাইন (Ad-Free Active)";
+                document.getElementById('status-text').textContent = "গান চলছে (Ad-Free Active)";
             }).catch(err => {
-                artLoader.classList.add('hidden');
-                console.warn("Playback error:", err);
+                console.warn("Playback stream waiting or cold start:", err);
             });
 
             updateActiveTrackUI();
             renderPlaylist();
         };
 
-        // অডিও এরর হ্যান্ডলার
-        audio.addEventListener('error', (e) => {
+        // স্বয়ংক্রিয় ফলব্যাক রিকভারি: যদি রেন্ডার স্ট্রিম প্রথমবারে ব্যর্থ হয়
+        audio.addEventListener('error', async (e) => {
+            console.warn("Audio loading failed on primary route. Trying auto-recovery...");
+            const track = tracks.find(t => t.id === currentTrackId);
+            
+            if (track && track.isYoutube && !fallbackAttempted) {
+                fallbackAttempted = true;
+                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-yellow-400 animate-pulse";
+                document.getElementById('status-text').textContent = "বিকল্প রুটে কানেক্ট হচ্ছে...";
+
+                // ইউটিউব ভিডিও আইডি এক্সট্র্যাক্ট করা
+                const match = track.ytUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+                if (match && match[1]) {
+                    const vid = match[1];
+                    try {
+                        const fallbackRes = await fetch(`https://pipedapi.kavin.rocks/streams/${vid}`, { signal: AbortSignal.timeout(5000) });
+                        if (fallbackRes.ok) {
+                            const data = await fallbackRes.json();
+                            const audioStreams = data.audioStreams || [];
+                            if (audioStreams.length > 0) {
+                                audio.src = audioStreams[0].url;
+                                audio.load();
+                                await audio.play();
+                                isPlaying = true;
+                                setPlayIcon(true);
+                                artLoader.classList.add('hidden');
+                                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-green-500";
+                                document.getElementById('status-text').textContent = "গান চলছে (মিরর স্ট্রীম)";
+                                return;
+                            }
+                        }
+                    } catch(err) {
+                        console.warn("Direct piped stream failed:", err);
+                    }
+                }
+            }
+
             artLoader.classList.add('hidden');
             isPlaying = false;
             setPlayIcon(false);
-            console.error("Audio error details:", audio.error);
             document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-red-500";
-            document.getElementById('status-text').textContent = "অডিও লোড হতে সমস্যা হয়েছে। ব্যাকএন্ড চেক করুন।";
+            document.getElementById('status-text').textContent = "সার্ভার রিস্টার্ট হচ্ছে, কয়েক সেকেন্ড পর আবার ক্লিক করুন";
         });
 
         playPauseBtn.addEventListener('click', () => {
@@ -754,17 +791,16 @@
                             playlistsData[category].push(...data.tracks);
                             refreshAllTracks();
                             localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
-                            alert(`${data.tracks.length} টি গান সফলভাবে "${category}" ক্যাটাগরিতে যোগ হয়েছে!`);
                             selectCategory(category);
                             playTrack(data.tracks[0].id);
                         } else {
-                            alert("প্লেলিস্টে কোনো গান পাওয়া যায়নি!");
+                            document.getElementById('status-text').textContent = "প্লেলিস্টে কোনো গান পাওয়া যায়নি";
                         }
                     } else {
-                        alert("প্লেলিস্ট ফেচ করতে সমস্যা হয়েছে। প্লেলিস্টটি পাবলিক কিনা চেক করুন।");
+                        document.getElementById('status-text').textContent = "প্লেলিস্ট ফেচ করতে সমস্যা হয়েছে";
                     }
                 } catch (err) {
-                    alert("সার্ভার রেসপন্স করছে না। কিছুক্ষণ পর আবার চেষ্টা করুন।");
+                    document.getElementById('status-text').textContent = "সার্ভার রেসপন্স করছে না";
                 }
             } else {
                 loaderMsg.textContent = "গানের তথ্য আনা হচ্ছে...";
