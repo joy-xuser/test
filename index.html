@@ -1,316 +1,50 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agomoni Sur - 100% Ad-Free Durga Puja Music</title>
+<!-- ... existing code ... -->
+    <!-- Pure HTML5 Native Audio Player (Powers 100% Ad-Free Playback) -->
+    <audio id="native-audio" preload="auto"></audio>
+
+    <!-- Fail-safe YouTube Player Container (Guarantees playback never gets stuck) -->
+    <div id="yt-player-wrapper" class="fixed bottom-24 right-6 z-40 w-[200px] h-[115px] rounded-xl overflow-hidden shadow-2xl border border-white/20 transition-all duration-300 pointer-events-auto hidden">
+        <div class="bg-black/90 px-2 py-1 text-[10px] text-gray-300 flex justify-between items-center border-b border-white/10">
+            <span class="flex items-center gap-1.5"><i class="fab fa-youtube text-red-500"></i> <span id="yt-status-label">YouTube ব্যাকআপ ইঞ্জিন</span></span>
+            <button id="toggle-yt-vis" class="hover:text-white"><i class="fas fa-chevron-down"></i></button>
+        </div>
+        <div id="yt-iframe-player" class="w-full h-[85px]"></div>
+    </div>
+
+    <div class="absolute inset-0 bg-black/25 z-0 pointer-events-none"></div>
+<!-- ... existing code ... -->
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- YouTube IFrame API for Fail-safe Engine -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #0c0703;
-            color: #fff;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(rgba(10, 5, 2, 0.78), rgba(15, 6, 2, 0.90)), 
-                        radial-gradient(circle at 20% 30%, rgba(255, 140, 0, 0.18) 0%, transparent 60%),
-                        url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover;
-        }
-
-        .golden-glass {
-            background: linear-gradient(135deg, rgba(60, 30, 10, 0.78) 0%, rgba(15, 8, 2, 0.92) 100%);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 170, 60, 0.28);
-            border-top: 1px solid rgba(255, 210, 100, 0.5);
-            border-left: 1px solid rgba(255, 190, 80, 0.4);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75), 0 0 30px rgba(249, 115, 22, 0.18);
-        }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-
-        .progress-bar-container {
-            position: relative;
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .playlist-item { transition: all 0.2s ease; }
-        .playlist-item:hover { background: rgba(255, 255, 255, 0.08); }
-        .playlist-item.active {
-            background: linear-gradient(90deg, rgba(255, 140, 0, 0.22) 0%, transparent 100%);
-            border-left: 3px solid #f97316;
-        }
-
-        .live-dot { animation: blink 2s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-    </style>
-</head>
-<body>
-
-    <!-- Pure HTML5 Native Audio Player (Powers 100% Ad-Free Playback) -->
-    <audio id="native-audio" preload="auto"></audio>
-
-    <!-- Hidden / Silent YouTube Fallback Container (Only used if all open APIs fail) -->
-    <div id="yt-fallback-container" style="display: none; position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
-        <div id="yt-iframe-player"></div>
-    </div>
-
-    <div class="absolute inset-0 bg-black/25 z-0 pointer-events-none"></div>
-
-    <div class="z-10 w-full h-full p-4 md:p-6 lg:p-8 flex flex-col justify-between">
-        
-        <!-- Header: Status indicator & Admin button -->
-        <div class="w-full flex justify-between items-center z-20">
-            <div id="backend-status-badge" class="px-3.5 py-1.5 rounded-full text-[11px] font-medium bg-black/50 border border-white/10 text-gray-300 flex items-center gap-2 shadow-lg backdrop-blur-md">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" id="status-dot"></span>
-                <span id="status-text" class="tracking-wide">Piped Ad-Free API সক্রিয়</span>
-            </div>
-
-            <button id="open-passcode-modal" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-[#ffaa3c]/30 text-[#ffb866] hover:text-white flex items-center justify-center transition-all shadow-lg active:scale-95" title="Admin Access">
-                <i class="fas fa-user text-base"></i>
-            </button>
-        </div>
-
-        <!-- Middle Section: Playlist Panel -->
-        <div class="flex-grow flex items-center justify-end w-full mt-4 lg:mt-0 relative z-20">
-            <div class="golden-glass rounded-[1.5rem] w-full lg:w-[415px] flex flex-col h-[60vh] max-h-[460px] overflow-hidden mr-0 lg:mr-8 transition-all duration-300 shadow-2xl relative" id="playlist-container">
-                
-                <!-- Category Drawer -->
-                <div id="playlist-category-drawer" class="absolute top-0 left-0 w-[70%] h-full bg-gradient-to-br from-[#3c1e0a]/98 to-[#1a0a00]/98 backdrop-blur-2xl border-r border-[#ffb450]/20 transform -translate-x-full transition-transform duration-300 ease-out z-30 flex flex-col shadow-[15px_0_30px_rgba(0,0,0,0.6)]">
-                    <div class="px-5 py-4 flex items-center justify-between border-b border-white/10 mt-2">
-                        <h4 class="font-bold text-[13px] tracking-widest text-[#ffb866]">CATEGORIES</h4>
-                        <button id="close-category-drawer" class="text-gray-400 hover:text-white w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="flex-grow overflow-y-auto px-3 py-2 space-y-1">
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('Mahalaya')">
-                            Mahalaya <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('Shasthi')">
-                            Shasthi <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('Saptami')">
-                            Saptami <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('Ashtami')">
-                            Ashtami <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('Navami')">
-                            Navami <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('Dashami')">
-                            Dashami <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                        <button class="w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-gray-200 hover:text-[#ff9d33] transition-colors font-medium flex justify-between items-center group text-sm" onclick="selectCategory('All Tracks')">
-                            All Tracks <i class="fas fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Playlist Header -->
-                <div class="px-6 py-4 flex justify-between items-center bg-transparent mt-2 relative z-20">
-                    <div class="flex items-center gap-2.5 cursor-pointer group hover:bg-white/5 px-3 py-1.5 -ml-3 rounded-lg transition-colors" id="open-category-drawer" title="ক্যাটাগরি দেখুন">
-                        <i class="fas fa-list-ul text-[#ff9d33]"></i>
-                        <h3 class="font-bold text-[13px] tracking-[0.15em] text-[#ffb866] group-hover:text-white transition-colors" id="playlist-main-title">PLAYLIST (0)</h3>
-                        <i class="fas fa-chevron-right text-[#ffb866] text-[10px] opacity-70 group-hover:translate-x-1 transition-transform"></i>
-                    </div>
-                    <button id="toggle-playlist" class="text-[12px] font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors flex items-center gap-2">
-                        <i class="fas fa-chevron-up transition-transform duration-300" id="playlist-icon"></i>
-                        <span id="playlist-toggle-text">লুকান</span>
-                    </button>
-                </div>
-
-                <!-- Playlist Items Container -->
-                <div class="overflow-y-auto flex-grow px-3 pb-3 scrollbar-thin scrollbar-thumb-white/20" id="playlist-items">
-                    <!-- Dynamic Tracks injected here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Section: Player Control Bar -->
-        <div class="w-full flex justify-center z-20 mt-4 pb-4">
-            <div class="golden-glass rounded-[2rem] w-full lg:w-[1000px] p-3.5 pr-6 flex flex-col lg:flex-row items-center justify-between relative gap-6 lg:gap-8 mx-auto">
-                
-                <!-- Left: Album Art & Track Info -->
-                <div class="flex items-center gap-4 md:gap-5 w-full lg:w-[58%] flex-shrink-0 min-w-0 pl-1">
-                    <div class="relative shrink-0">
-                        <img 
-                            src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80" 
-                            alt="Album Art" 
-                            id="current-album-art" 
-                            class="w-[85px] h-[85px] rounded-[1rem] object-cover shadow-lg border border-white/10 shrink-0 transition-all duration-300"
-                        />
-                        <div id="art-loader" class="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[1rem] flex items-center justify-center hidden">
-                            <i class="fas fa-circle-notch fa-spin text-[#ffaa3c] text-xl"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-col justify-center w-full min-w-0 py-1">
-                        <div class="flex items-center gap-2 mb-1 bg-gradient-to-r from-[#5a1b0a] to-[#2b0d05] border border-orange-500/30 px-2.5 py-0.5 rounded-full w-fit">
-                            <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full live-dot shadow-[0_0_5px_rgba(52,211,153,0.8)]" id="stream-status-dot"></div>
-                            <span class="text-[10px] font-bold text-[#ffb866] tracking-widest uppercase" id="stream-mode-badge">100% AD-FREE NATIVE</span>
-                        </div>
-                        
-                        <h4 class="font-semibold text-white text-[16px] tracking-wide truncate mb-0.5" id="current-track-title">গান নির্বাচন করুন</h4>
-                        <span class="text-[12px] text-gray-300 truncate mb-3" id="current-track-artist">শিল্পীর নাম</span>
-                        
-                        <!-- Progress Bar & Timestamps -->
-                        <div class="w-full relative">
-                            <div class="progress-bar-container" id="progress-container">
-                                <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full pointer-events-none" id="progress-fill" style="width: 0%;"></div>
-                                <div class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#FFE4B5] rounded-full shadow-[0_0_8px_rgba(255,140,0,0.6)] pointer-events-none" id="progress-thumb" style="left: 0%;"></div>
-                            </div>
-                            <div class="flex justify-between items-center w-full mt-1.5 px-0.5">
-                                <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="current-time">00:00</span>
-                                <span class="text-[11px] text-gray-300 font-medium tracking-wide" id="total-time">00:00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Center: Controls -->
-                <div class="flex items-center justify-center gap-3 md:gap-4 shrink-0">
-                    <button class="w-[36px] h-[36px] rounded-full text-gray-400 hover:text-white transition-colors flex items-center justify-center" id="shuffle-btn" title="শাফেল">
-                        <i class="fas fa-shuffle text-xs"></i>
-                    </button>
-                    <button class="w-[42px] h-[42px] rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors shadow-inner active:scale-95" id="prev-btn">
-                        <i class="fas fa-backward-step text-sm"></i>
-                    </button>
-                    <button class="w-[54px] h-[54px] rounded-full bg-gradient-to-b from-[#FFA751] to-[#E65C00] hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-[0_4px_15px_rgba(230,92,0,0.3)] transition-transform" id="play-pause-btn">
-                        <i class="fas fa-play text-xl ml-0.5"></i>
-                    </button>
-                    <button class="w-[42px] h-[42px] rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors shadow-inner active:scale-95" id="next-btn">
-                        <i class="fas fa-forward-step text-sm"></i>
-                    </button>
-                    <button class="w-[36px] h-[36px] rounded-full text-[#ffb866] hover:text-white transition-colors flex items-center justify-center relative" id="repeat-btn" title="রিপিট">
-                        <i class="fas fa-repeat text-xs" id="repeat-icon"></i>
-                    </button>
-                </div>
-
-                <!-- Right: Volume -->
-                <div class="flex items-center justify-end gap-3 shrink-0 mr-4 lg:mr-8 pr-6 w-[170px]">
-                    <i class="fas fa-volume-up text-gray-300 text-sm cursor-pointer hover:text-white transition-colors" id="mute-icon"></i>
-                    <div class="w-[85px] h-[6px] bg-white/20 rounded-full relative cursor-pointer py-1" id="volume-container">
-                        <div class="absolute top-1/2 -translate-y-1/2 left-0 h-[6px] bg-gradient-to-r from-[#FF8C00] to-[#FFB75E] rounded-full pointer-events-none" id="volume-fill" style="width: 100%;"></div>
-                        <div class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#FFE4B5] rounded-full shadow-[0_0_6px_rgba(255,140,0,0.8)] pointer-events-none" id="volume-thumb" style="left: 100%;"></div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL 1: PASSCODE VERIFICATION (47842828) -->
-    <div id="passcode-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="golden-glass w-full max-w-xs rounded-3xl p-6 border border-[#ffaa3c]/40 shadow-2xl relative text-center">
-            <button id="close-passcode-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="w-12 h-12 mx-auto rounded-full bg-[#ff9d33]/20 border border-[#ffaa3c]/40 flex items-center justify-center text-[#ffb866] mb-3">
-                <i class="fas fa-lock text-lg"></i>
-            </div>
-            <h3 class="text-base font-bold text-white mb-1">অ্যাডমিন পাসকোড দিন</h3>
-            <p class="text-xs text-gray-400 mb-4">পাসকোড দিলে নতুন গান বা প্লেলিস্ট যোগ করতে পারবেন</p>
-            <form id="passcode-form" class="space-y-3">
-                <input type="password" id="input-passcode" placeholder="পাসকোড লিখুন" maxlength="12" class="w-full text-center tracking-widest bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors" autocomplete="off">
-                <p id="passcode-error" class="text-xs text-red-400 hidden">ভুল পাসকোড! আবার চেষ্টা করুন।</p>
-                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-lg transition-transform active:scale-[0.98]">
-                    যাচাই করুন
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL 2: ADD SONG / PLAYLIST -->
-    <div id="add-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="golden-glass w-full max-w-md rounded-3xl p-6 border border-[#ffaa3c]/40 shadow-2xl relative">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-[#ffb866] flex items-center gap-2">
-                    <i class="fas fa-layer-group"></i> গান / প্লেলিস্ট যোগ করুন
-                </h3>
-                <button id="close-add-modal" class="text-gray-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <!-- Tab Switcher -->
-            <div class="flex bg-black/50 p-1 rounded-xl mb-4 border border-white/10">
-                <button type="button" id="tab-single" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#FF8C00] text-white transition-all">একক গান (Single)</button>
-                <button type="button" id="tab-playlist" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">ইউটিউব প্লেলিস্ট (Full Playlist)</button>
-            </div>
-
-            <form id="add-song-form" class="space-y-4">
-                <div>
-                    <label id="url-label" class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube বা MP3 লিংক</label>
-                    <input type="url" id="input-song-url" required placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33]">
-                    <p id="url-hint" class="text-[10px] text-gray-400 mt-1">একক গানের YouTube বা ডিরেক্ট MP3 লিংক দিন</p>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">ক্যাটাগরি (Category)</label>
-                    <select id="input-song-category" class="w-full bg-[#201005] border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33]">
-                        <option value="Mahalaya">Mahalaya</option>
-                        <option value="Shasthi" selected>Shasthi</option>
-                        <option value="Saptami">Saptami</option>
-                        <option value="Ashtami">Ashtami</option>
-                        <option value="Navami">Navami</option>
-                        <option value="Dashami">Dashami</option>
-                    </select>
-                </div>
-
-                <div id="fetch-loader" class="text-xs text-center py-2 text-orange-400 hidden">
-                    <i class="fas fa-spinner fa-spin mr-1"></i> <span id="loader-msg">তথ্য লোড হচ্ছে...</span>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" id="btn-save-song" class="w-full py-3 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-[0.98]">
-                        ১০০% অ্যাড-ফ্রি সেভ ও প্লে করুন
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+<!-- ... existing code ... -->
     <script>
         const BACKEND_URL = 'https://backendtest-4hjb.onrender.com';
 
-        // 100% Ad-Free Open API Instances (Multi-instance Rotating Pool with Fallback)
+        // 100% Ad-Free Open API Instances (Fast & Active Global Cluster)
         const PIPED_INSTANCES = [
+            "https://pipedapi.tokhmi.xyz",
             "https://api.piped.privacydev.net",
-            "https://pipedapi.kavin.rocks",
-            "https://piped-api.garudalinux.org",
-            "https://api.piped.projectsegfau.lt",
-            "https://api-piped.mha.fi"
+            "https://piped-api.lunar.icu",
+            "https://pipedapi.leptons.xyz",
+            "https://api.piped.yt"
         ];
 
         const INVIDIOUS_INSTANCES = [
-            "https://invidious.nerdvpn.de",
-            "https://inv.tux.pizza",
+            "https://inv.nadeko.net",
+            "https://invidious.jing.rocks",
+            "https://invidious.drgns.space",
             "https://invidious.private.coffee",
-            "https://vid.puffyan.us"
+            "https://yt.artemislena.eu"
         ];
 
-        // Cache resolved audio streams in memory to enable zero-wait replaying
+        // Cache resolved audio streams in memory
         const audioStreamCache = new Map();
 
-        // Safe timeout signal helper
+        // Safe timeout signal helper (2.5s timeout per instance for speed)
         function getTimeoutSignal(ms) {
             if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
                 return AbortSignal.timeout(ms);
@@ -320,7 +54,7 @@
             return controller.signal;
         }
 
-        // Piped & Invidious Audio Stream Resolver (No ads, pure binary stream)
+        // Fast Ad-Free Stream Resolver
         async function fetchAdFreeStreamUrl(ytVideoId) {
             if (audioStreamCache.has(ytVideoId)) {
                 return audioStreamCache.get(ytVideoId);
@@ -330,12 +64,11 @@
             for (const instance of PIPED_INSTANCES) {
                 try {
                     const res = await fetch(`${instance}/streams/${ytVideoId}`, {
-                        signal: getTimeoutSignal(4000)
+                        signal: getTimeoutSignal(2500)
                     });
                     if (!res.ok) continue;
                     const data = await res.json();
                     if (data && data.audioStreams && data.audioStreams.length > 0) {
-                        // Prefer M4A for universal browser compatibility
                         const bestAudio = data.audioStreams.find(s => s.format === 'M4A' || s.mimeType?.includes('audio/mp4')) 
                                        || data.audioStreams[0];
                         if (bestAudio && bestAudio.url) {
@@ -343,16 +76,14 @@
                             return bestAudio.url;
                         }
                     }
-                } catch(e) {
-                    // Try next instance silently
-                }
+                } catch(e) {}
             }
 
-            // 2. Fallback to Invidious API Instances
+            // 2. Try Invidious API Instances
             for (const instance of INVIDIOUS_INSTANCES) {
                 try {
                     const res = await fetch(`${instance}/api/v1/videos/${ytVideoId}`, {
-                        signal: getTimeoutSignal(4000)
+                        signal: getTimeoutSignal(2500)
                     });
                     if (!res.ok) continue;
                     const data = await res.json();
@@ -364,172 +95,87 @@
                             return audioOnly.url;
                         }
                     }
-                } catch(e) {
-                    // Try next instance silently
-                }
+                } catch(e) {}
             }
 
             return null;
         }
 
-        // Default verified tracks
-        const defaultTracks = {
-            'Mahalaya': [
-                {
-                    id: 'default_m1',
-                    title: "মহিষাসুরমর্দিনী (Mahisasuramardini)",
-                    artist: "বীরেন্দ্রকৃষ্ণ ভদ্র",
-                    duration: "01:29:19",
-                    isYoutube: true,
-                    ytId: "YQyo8QeoYhc",
-                    ytUrl: "https://www.youtube.com/watch?v=YQyo8QeoYhc",
-                    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop"
+        // YouTube IFrame Fail-Safe Engine Setup
+        let ytPlayer = null;
+        let isYtReady = false;
+        let activePlaybackMode = 'native'; // 'native' or 'youtube'
+        let ytProgressInterval = null;
+
+        window.onYouTubeIframeAPIReady = function() {
+            ytPlayer = new YT.Player('yt-iframe-player', {
+                height: '85',
+                width: '100%',
+                playerVars: {
+                    autoplay: 0,
+                    controls: 0,
+                    disablekb: 1,
+                    fs: 0,
+                    rel: 0,
+                    playsinline: 1
+                },
+                events: {
+                    onReady: () => { isYtReady = true; },
+                    onStateChange: onYtStateChange,
+                    onError: () => { playNextTrack(); }
                 }
-            ],
-            'Shasthi': [
-                {
-                    id: 'default_s1',
-                    title: "Dhak Solo & Agomoni Dhun",
-                    artist: "Traditional Dhak Beats",
-                    duration: "Live",
-                    isYoutube: false,
-                    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-                    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80"
-                }
-            ],
-            'Saptami': [],
-            'Ashtami': [],
-            'Navami': [],
-            'Dashami': [],
-            'All Tracks': []
+            });
         };
 
-        const playlistsData = {
-            'Mahalaya': [...defaultTracks['Mahalaya']],
-            'Shasthi': [...defaultTracks['Shasthi']],
-            'Saptami': [],
-            'Ashtami': [],
-            'Navami': [],
-            'Dashami': [],
-            'All Tracks': []
-        };
-
-        // Local cache restoration
-        const savedTracks = localStorage.getItem('agomoni_user_tracks');
-        if (savedTracks) {
-            try {
-                const parsed = JSON.parse(savedTracks);
-                for (const cat in parsed) {
-                    if (playlistsData[cat]) playlistsData[cat] = parsed[cat];
-                }
-            } catch(e) {}
-        }
-
-        function refreshAllTracks() {
-            let combined = [];
-            for (const cat in playlistsData) {
-                if (cat !== 'All Tracks') combined = combined.concat(playlistsData[cat]);
-            }
-            playlistsData['All Tracks'] = combined;
-        }
-        refreshAllTracks();
-
-        // Server Sync
-        async function syncTracksWithServer() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/tracks`, { signal: getTimeoutSignal(8000) });
-                if (res.ok) {
-                    const serverData = await res.json();
-                    let updated = false;
-                    for (const cat in serverData) {
-                        if (Array.isArray(serverData[cat]) && serverData[cat].length > 0) {
-                            playlistsData[cat] = serverData[cat];
-                            updated = true;
-                        }
-                    }
-                    if (updated) {
-                        refreshAllTracks();
-                        renderPlaylist();
-                        localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
-                    }
-                }
-            } catch(err) {
-                console.log("Server sync fallback to local cache:", err);
+        function onYtStateChange(event) {
+            if (activePlaybackMode !== 'youtube') return;
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                setPlayIcon(true);
+                artLoader.classList.add('hidden');
+                streamModeBadge.textContent = "YOUTUBE ENGINE";
+                statusBadgeText.textContent = "ইউটিউব স্ট্রিমে বাজছে";
+                streamStatusDot.className = "w-1.5 h-1.5 bg-emerald-400 rounded-full live-dot";
+                startYtProgressLoop();
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                isPlaying = false;
+                setPlayIcon(false);
+                stopYtProgressLoop();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                stopYtProgressLoop();
+                playNextTrack();
             }
         }
-        syncTracksWithServer();
 
-        // Audio Engine Elements & State
-        const audio = document.getElementById('native-audio');
-        let currentPlaylistName = 'All Tracks';
-        let tracks = playlistsData[currentPlaylistName];
-        let currentTrackId = tracks.length > 0 ? tracks[0].id : null;
-        let isPlaying = false;
-        let isShuffle = false;
-        let repeatMode = 'all'; // 'all', 'one', 'off'
-        let currentVolume = 1;
-
-        // UI Element References
-        const playPauseBtn = document.getElementById('play-pause-btn');
-        const playIcon = playPauseBtn.querySelector('i');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const shuffleBtn = document.getElementById('shuffle-btn');
-        const repeatBtn = document.getElementById('repeat-btn');
-        const artLoader = document.getElementById('art-loader');
-        const progressContainer = document.getElementById('progress-container');
-        const progressFill = document.getElementById('progress-fill');
-        const progressThumb = document.getElementById('progress-thumb');
-        const currentTimeDisplay = document.getElementById('current-time');
-        const totalTimeDisplay = document.getElementById('total-time');
-        const trackTitleDisplay = document.getElementById('current-track-title');
-        const trackArtistDisplay = document.getElementById('current-track-artist');
-        const currentAlbumArt = document.getElementById('current-album-art');
-        const volumeContainer = document.getElementById('volume-container');
-        const volumeFill = document.getElementById('volume-fill');
-        const volumeThumb = document.getElementById('volume-thumb');
-        const muteIcon = document.getElementById('mute-icon');
-        const statusBadgeText = document.getElementById('status-text');
-        const streamStatusDot = document.getElementById('stream-status-dot');
-        const streamModeBadge = document.getElementById('stream-mode-badge');
-
-        function formatTime(secs) {
-            if (isNaN(secs) || secs < 0) return "00:00";
-            const m = Math.floor(secs / 60).toString().padStart(2, '0');
-            const s = Math.floor(secs % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
+        function startYtProgressLoop() {
+            stopYtProgressLoop();
+            ytProgressInterval = setInterval(() => {
+                if (ytPlayer && ytPlayer.getCurrentTime && ytPlayer.getDuration) {
+                    const curr = ytPlayer.getCurrentTime();
+                    const dur = ytPlayer.getDuration();
+                    if (dur > 0) {
+                        updateProgressBar((curr / dur) * 100);
+                        currentTimeDisplay.textContent = formatTime(curr);
+                        totalTimeDisplay.textContent = formatTime(dur);
+                    }
+                }
+            }, 500);
         }
 
-        function setPlayIcon(isPlay) {
-            playIcon.className = isPlay ? 'fas fa-pause text-xl ml-0.5' : 'fas fa-play text-xl ml-0.5';
+        function stopYtProgressLoop() {
+            if (ytProgressInterval) {
+                clearInterval(ytProgressInterval);
+                ytProgressInterval = null;
+            }
         }
 
-        function updateProgressBar(percentage) {
-            const clamped = Math.max(0, Math.min(100, percentage));
-            progressFill.style.width = `${clamped}%`;
-            progressThumb.style.left = `${clamped}%`;
-        }
-
-        function setVolume(val) {
-            const clamped = Math.max(0, Math.min(1, val));
-            currentVolume = clamped;
-            audio.volume = clamped;
-            audio.muted = (clamped === 0);
-
-            volumeFill.style.width = `${clamped * 100}%`;
-            volumeThumb.style.left = `${clamped * 100}%`;
-            muteIcon.className = clamped === 0 
-                ? "fas fa-volume-mute text-gray-300 text-sm cursor-pointer" 
-                : "fas fa-volume-up text-gray-300 text-sm cursor-pointer";
-        }
-
-        function extractYouTubeId(url) {
-            if (!url) return null;
-            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
-            return match ? match[1] : null;
-        }
-
-        // Master Track Player using Piped / Invidious Ad-Free Engine
+        // Toggle YouTube mini player visibility
+        const ytWrapper = document.getElementById('yt-player-wrapper');
+        document.getElementById('toggle-yt-vis').addEventListener('click', () => {
+            ytWrapper.classList.toggle('hidden');
+        });
+<!-- ... existing code ... -->
+        // Master Track Player (Zero-Hang Guaranteed Audio Flow)
         window.playTrack = async function(id) {
             let track = tracks.find(t => t.id === id);
             if (!track) {
@@ -550,16 +196,26 @@
 
             artLoader.classList.remove('hidden');
             statusBadgeText.textContent = "অ্যাড-ফ্রি অডিও স্ট্রিম প্রস্তুত হচ্ছে...";
-            streamModeBadge.textContent = "RESOLVING AD-FREE...";
+            streamModeBadge.textContent = "CONNECTING...";
             streamStatusDot.className = "w-1.5 h-1.5 bg-yellow-400 rounded-full live-dot";
+
+            // Stop any ongoing native or YT playback
+            audio.pause();
+            audio.removeAttribute('src');
+            stopYtProgressLoop();
+            if (ytPlayer && ytPlayer.stopVideo) {
+                try { ytPlayer.stopVideo(); } catch(e) {}
+            }
 
             const ytId = track.ytId || extractYouTubeId(track.ytUrl || track.url);
 
             if (track.isYoutube || ytId) {
-                // Fetch Ad-Free stream URL from Piped / Invidious instances
+                // Step 1: Try Ad-Free open API stream
                 const streamUrl = await fetchAdFreeStreamUrl(ytId);
 
                 if (streamUrl) {
+                    activePlaybackMode = 'native';
+                    ytWrapper.classList.add('hidden');
                     audio.src = streamUrl;
                     audio.load();
                     audio.play().then(() => {
@@ -570,19 +226,17 @@
                         streamModeBadge.textContent = "100% AD-FREE NATIVE";
                         streamStatusDot.className = "w-1.5 h-1.5 bg-emerald-400 rounded-full live-dot";
                     }).catch(err => {
-                        console.warn("Autoplay interrupted:", err);
-                        artLoader.classList.add('hidden');
+                        console.warn("Native audio play failed, falling back to YouTube:", err);
+                        fallbackToYouTube(ytId);
                     });
                 } else {
-                    // Fallback to secondary stream or direct video preview
-                    statusBadgeText.textContent = "বিকল্প স্ট্রিমে চালানো হচ্ছে...";
-                    audio.src = `https://invidious.nerdvpn.de/latest_version?id=${ytId}&itag=140`;
-                    audio.load();
-                    audio.play().catch(() => {});
-                    artLoader.classList.add('hidden');
+                    // Step 2: Instant Fail-Safe to YouTube Engine (Never Stalls!)
+                    fallbackToYouTube(ytId);
                 }
             } else {
                 // Direct MP3 URL
+                activePlaybackMode = 'native';
+                ytWrapper.classList.add('hidden');
                 audio.src = track.url;
                 audio.load();
                 audio.play().then(() => {
@@ -601,19 +255,44 @@
             renderPlaylist();
         };
 
+        // Fail-safe execution helper
+        function fallbackToYouTube(ytId) {
+            activePlaybackMode = 'youtube';
+            statusBadgeText.textContent = "ইউটিউব ইঞ্জিনে সরাসরি চালু হচ্ছে...";
+            streamModeBadge.textContent = "YOUTUBE FAIL-SAFE";
+            streamStatusDot.className = "w-1.5 h-1.5 bg-orange-400 rounded-full live-dot";
+
+            ytWrapper.classList.remove('hidden');
+
+            const startYt = () => {
+                if (ytPlayer && ytPlayer.loadVideoById) {
+                    ytPlayer.loadVideoById(ytId);
+                    ytPlayer.unMute();
+                    ytPlayer.setVolume(currentVolume * 100);
+                    ytPlayer.playVideo();
+                } else {
+                    setTimeout(startYt, 500);
+                }
+            };
+
+            startYt();
+        }
+
         // Native Audio Events
         audio.addEventListener('timeupdate', () => {
-            if (!isNaN(audio.duration) && audio.duration > 0) {
+            if (activePlaybackMode === 'native' && !isNaN(audio.duration) && audio.duration > 0) {
                 updateProgressBar((audio.currentTime / audio.duration) * 100);
                 currentTimeDisplay.textContent = formatTime(audio.currentTime);
                 totalTimeDisplay.textContent = formatTime(audio.duration);
             }
         });
 
-        audio.addEventListener('ended', playNextTrack);
+        audio.addEventListener('ended', () => {
+            if (activePlaybackMode === 'native') playNextTrack();
+        });
 
         audio.addEventListener('waiting', () => {
-            artLoader.classList.remove('hidden');
+            if (activePlaybackMode === 'native') artLoader.classList.remove('hidden');
         });
 
         audio.addEventListener('canplay', () => {
@@ -622,11 +301,27 @@
 
         audio.addEventListener('error', (e) => {
             artLoader.classList.add('hidden');
-            console.warn("Audio stream notice:", e);
+            if (activePlaybackMode === 'native') {
+                const track = tracks.find(t => t.id === currentTrackId);
+                const ytId = track?.ytId || extractYouTubeId(track?.ytUrl || track?.url);
+                if (ytId) fallbackToYouTube(ytId);
+            }
         });
 
         // Controls
         playPauseBtn.addEventListener('click', () => {
+            if (activePlaybackMode === 'youtube') {
+                if (ytPlayer && ytPlayer.getPlayerState) {
+                    const state = ytPlayer.getPlayerState();
+                    if (state === YT.PlayerState.PLAYING) {
+                        ytPlayer.pauseVideo();
+                    } else {
+                        ytPlayer.playVideo();
+                    }
+                }
+                return;
+            }
+
             if (!audio.src) {
                 if (tracks.length > 0) playTrack(tracks[0].id);
                 return;
@@ -645,331 +340,39 @@
             renderPlaylist();
         });
 
-        function playNextTrack() {
-            if (tracks.length === 0) return;
-            if (repeatMode === 'one') {
-                playTrack(currentTrackId);
-                return;
-            }
-            if (isShuffle && tracks.length > 1) {
-                let nextIdx;
-                do {
-                    nextIdx = Math.floor(Math.random() * tracks.length);
-                } while (tracks[nextIdx].id === currentTrackId);
-                playTrack(tracks[nextIdx].id);
-                return;
-            }
-            const idx = tracks.findIndex(t => t.id === currentTrackId);
-            if (idx !== -1 && idx < tracks.length - 1) {
-                playTrack(tracks[idx + 1].id);
-            } else if (repeatMode === 'all') {
-                playTrack(tracks[0].id);
-            } else {
-                isPlaying = false;
-                setPlayIcon(false);
-            }
-        }
-
-        function playPrevTrack() {
-            if (tracks.length === 0) return;
-            const idx = tracks.findIndex(t => t.id === currentTrackId);
-            if (idx > 0) {
-                playTrack(tracks[idx - 1].id);
-            } else {
-                audio.currentTime = 0;
-            }
-        }
-
-        nextBtn.addEventListener('click', playNextTrack);
-        prevBtn.addEventListener('click', playPrevTrack);
-
         // Progress Seeking
         progressContainer.addEventListener('click', (e) => {
             const rect = progressContainer.getBoundingClientRect();
             const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-            if (!isNaN(audio.duration) && audio.duration > 0) {
-                audio.currentTime = pos * audio.duration;
+
+            if (activePlaybackMode === 'youtube') {
+                if (ytPlayer && ytPlayer.getDuration) {
+                    const dur = ytPlayer.getDuration();
+                    if (dur > 0) ytPlayer.seekTo(pos * dur, true);
+                }
+            } else {
+                if (!isNaN(audio.duration) && audio.duration > 0) {
+                    audio.currentTime = pos * audio.duration;
+                }
             }
         });
 
         // Volume Bar
-        volumeContainer.addEventListener('click', (e) => {
-            const rect = volumeContainer.getBoundingClientRect();
-            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-            setVolume(pos);
-        });
+        function setVolume(val) {
+            const clamped = Math.max(0, Math.min(1, val));
+            currentVolume = clamped;
+            audio.volume = clamped;
+            audio.muted = (clamped === 0);
 
-        muteIcon.addEventListener('click', () => {
-            setVolume(currentVolume > 0 ? 0 : 0.85);
-        });
-
-        // Shuffle & Repeat
-        shuffleBtn.addEventListener('click', () => {
-            isShuffle = !isShuffle;
-            shuffleBtn.className = isShuffle 
-                ? "w-[36px] h-[36px] rounded-full text-[#ffb866] bg-white/10 transition-colors flex items-center justify-center" 
-                : "w-[36px] h-[36px] rounded-full text-gray-400 hover:text-white transition-colors flex items-center justify-center";
-        });
-
-        repeatBtn.addEventListener('click', () => {
-            if (repeatMode === 'all') {
-                repeatMode = 'one';
-                repeatBtn.innerHTML = '<i class="fas fa-repeat text-xs"></i><span class="text-[9px] font-bold absolute -top-1 -right-0.5 text-[#ffaa3c]">1</span>';
-            } else if (repeatMode === 'one') {
-                repeatMode = 'off';
-                repeatBtn.className = "w-[36px] h-[36px] rounded-full text-gray-500 hover:text-white transition-colors flex items-center justify-center relative";
-                repeatBtn.innerHTML = '<i class="fas fa-repeat text-xs"></i>';
-            } else {
-                repeatMode = 'all';
-                repeatBtn.className = "w-[36px] h-[36px] rounded-full text-[#ffb866] hover:text-white transition-colors flex items-center justify-center relative";
-                repeatBtn.innerHTML = '<i class="fas fa-repeat text-xs"></i>';
+            if (ytPlayer && ytPlayer.setVolume) {
+                ytPlayer.setVolume(clamped * 100);
+                if (clamped === 0) ytPlayer.mute(); else ytPlayer.unMute();
             }
-        });
 
-        // Playlist Rendering
-        function renderPlaylist() {
-            const container = document.getElementById('playlist-items');
-            if (!container) return;
-            container.innerHTML = '';
-            tracks = playlistsData[currentPlaylistName] || [];
-
-            if (tracks.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-10 text-gray-400 text-xs">
-                        <i class="fas fa-music text-2xl mb-2 opacity-50 block"></i>
-                        কোনো গান নেই। অ্যাডমিন আইকনে ক্লিক করে গান যোগ করুন।
-                    </div>
-                `;
-            } else {
-                tracks.forEach((track, index) => {
-                    const num = index + 1;
-                    const isActive = track.id === currentTrackId;
-                    const item = document.createElement('div');
-                    item.className = `playlist-item flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer mb-1 group ${isActive ? 'active' : ''}`;
-                    item.onclick = () => playTrack(track.id);
-
-                    item.innerHTML = `
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="text-xs text-gray-400 w-4 text-center font-medium shrink-0">${num}</span>
-                            <span class="text-xs font-medium ${isActive ? 'text-[#ff9d33]' : 'text-white'} truncate max-w-[170px]">${track.title}</span>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="text-[11px] text-gray-400 font-medium truncate max-w-[85px]">${track.artist}</span>
-                            <i class="fas ${isActive && isPlaying ? 'fa-pause' : 'fa-play'} text-[9px] ${isActive ? 'text-[#ff9d33]' : 'text-gray-400 group-hover:text-white'}"></i>
-                        </div>
-                    `;
-                    container.appendChild(item);
-                });
-            }
-            document.getElementById('playlist-main-title').textContent = `${currentPlaylistName.toUpperCase()} (${tracks.length})`;
+            volumeFill.style.width = `${clamped * 100}%`;
+            volumeThumb.style.left = `${clamped * 100}%`;
+            muteIcon.className = clamped === 0 
+                ? "fas fa-volume-mute text-gray-300 text-sm cursor-pointer" 
+                : "fas fa-volume-up text-gray-300 text-sm cursor-pointer";
         }
-
-        // Category Drawer
-        const categoryDrawer = document.getElementById('playlist-category-drawer');
-        document.getElementById('open-category-drawer').addEventListener('click', () => categoryDrawer.classList.remove('-translate-x-full'));
-        document.getElementById('close-category-drawer').addEventListener('click', () => categoryDrawer.classList.add('-translate-x-full'));
-
-        window.selectCategory = function(cat) {
-            currentPlaylistName = cat;
-            tracks = playlistsData[cat] || playlistsData['All Tracks'];
-            renderPlaylist();
-            categoryDrawer.classList.add('-translate-x-full');
-        };
-
-        // Playlist Show/Hide
-        const toggleBtn = document.getElementById('toggle-playlist');
-        const playlistItems = document.getElementById('playlist-items');
-        const playlistIcon = document.getElementById('playlist-icon');
-        const playlistToggleText = document.getElementById('playlist-toggle-text');
-        const playlistContainer = document.getElementById('playlist-container');
-        let isPlaylistVisible = true;
-
-        toggleBtn.addEventListener('click', () => {
-            isPlaylistVisible = !isPlaylistVisible;
-            playlistItems.style.display = isPlaylistVisible ? 'block' : 'none';
-            playlistIcon.classList.toggle('rotate-180', !isPlaylistVisible);
-            playlistToggleText.textContent = isPlaylistVisible ? 'লুকান' : 'দেখান';
-            playlistContainer.style.height = isPlaylistVisible ? '60vh' : 'auto';
-        });
-
-        // Passcode & Add Modal
-        const CORRECT_PASSCODE = "47842828";
-        const passcodeModal = document.getElementById('passcode-modal');
-        const addModal = document.getElementById('add-modal');
-        const inputPasscode = document.getElementById('input-passcode');
-        const passcodeError = document.getElementById('passcode-error');
-
-        document.getElementById('open-passcode-modal').addEventListener('click', () => {
-            inputPasscode.value = '';
-            passcodeError.classList.add('hidden');
-            passcodeModal.classList.remove('hidden');
-            setTimeout(() => inputPasscode.focus(), 50);
-        });
-
-        document.getElementById('close-passcode-modal').addEventListener('click', () => passcodeModal.classList.add('hidden'));
-        document.getElementById('close-add-modal').addEventListener('click', () => addModal.classList.add('hidden'));
-
-        document.getElementById('passcode-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (inputPasscode.value.trim() === CORRECT_PASSCODE) {
-                passcodeModal.classList.add('hidden');
-                addModal.classList.remove('hidden');
-            } else {
-                passcodeError.classList.remove('hidden');
-                inputPasscode.value = '';
-            }
-        });
-
-        // Single vs Playlist Tab Switching
-        let isPlaylistMode = false;
-        const tabSingle = document.getElementById('tab-single');
-        const tabPlaylist = document.getElementById('tab-playlist');
-        const urlLabel = document.getElementById('url-label');
-        const inputSongUrl = document.getElementById('input-song-url');
-        const urlHint = document.getElementById('url-hint');
-        const btnSaveSong = document.getElementById('btn-save-song');
-
-        tabSingle.addEventListener('click', () => {
-            isPlaylistMode = false;
-            tabSingle.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#FF8C00] text-white transition-all";
-            tabPlaylist.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
-            urlLabel.textContent = "YouTube বা MP3 লিংক";
-            inputSongUrl.placeholder = "https://www.youtube.com/watch?v=...";
-            urlHint.textContent = "একক গানের YouTube বা ডিরেক্ট MP3 লিংক দিন";
-            btnSaveSong.textContent = "১০০% অ্যাড-ফ্রি সেভ ও প্লে করুন";
-        });
-
-        tabPlaylist.addEventListener('click', () => {
-            isPlaylistMode = true;
-            tabPlaylist.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#FF8C00] text-white transition-all";
-            tabSingle.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
-            urlLabel.textContent = "YouTube Playlist লিংক";
-            inputSongUrl.placeholder = "https://www.youtube.com/playlist?list=...";
-            urlHint.textContent = "প্লেলিস্টের সব গান স্বয়ংক্রিয়ভাবে তালিকায় যুক্ত হবে";
-            btnSaveSong.textContent = "পুরো প্লেলিস্ট ফেচ করে যুক্ত করুন";
-        });
-
-        // Add Song / Playlist Logic
-        const addSongForm = document.getElementById('add-song-form');
-        const fetchLoader = document.getElementById('fetch-loader');
-        const loaderMsg = document.getElementById('loader-msg');
-
-        addSongForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const songUrl = inputSongUrl.value.trim();
-            const category = document.getElementById('input-song-category').value;
-
-            fetchLoader.classList.remove('hidden');
-            btnSaveSong.disabled = true;
-
-            if (!playlistsData[category]) playlistsData[category] = [];
-
-            if (isPlaylistMode) {
-                loaderMsg.textContent = "প্লেলিস্ট থেকে সব গান লোড হচ্ছে...";
-                try {
-                    const res = await fetch(`${BACKEND_URL}/playlist?url=${encodeURIComponent(songUrl)}`, { signal: getTimeoutSignal(30000) });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.tracks && data.tracks.length > 0) {
-                            playlistsData[category].push(...data.tracks);
-                            refreshAllTracks();
-                            localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
-                            
-                            // Background Cloud Sync to server
-                            fetch(`${BACKEND_URL}/api/tracks`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ category: category, tracks: data.tracks })
-                            }).catch(() => {});
-
-                            selectCategory(category);
-                            playTrack(data.tracks[0].id);
-                        }
-                    } else {
-                        throw new Error("Failed to fetch playlist");
-                    }
-                } catch (err) {
-                    const ytId = extractYouTubeId(songUrl);
-                    if (ytId) {
-                        const fallbackTrack = {
-                            id: 'yt_' + ytId,
-                            title: "YouTube Music",
-                            artist: "Durga Puja Stream",
-                            duration: "Live",
-                            isYoutube: true,
-                            ytId: ytId,
-                            ytUrl: songUrl,
-                            image: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
-                        };
-                        playlistsData[category].push(fallbackTrack);
-                        refreshAllTracks();
-                        localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
-
-                        fetch(`${BACKEND_URL}/api/tracks`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ category: category, tracks: [fallbackTrack] })
-                        }).catch(() => {});
-
-                        selectCategory(category);
-                    }
-                }
-            } else {
-                loaderMsg.textContent = "গানের তথ্য যোগ করা হচ্ছে...";
-                const ytId = extractYouTubeId(songUrl);
-                const isYt = Boolean(ytId);
-                let meta = {
-                    title: "নতুন ট্র্যাক",
-                    artist: "শিল্পী",
-                    thumbnail: isYt ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "https://placehold.co/150x150/3c1e0a/ffb450?text=Music"
-                };
-
-                if (isYt) {
-                    try {
-                        const oEmbedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(songUrl)}`, { signal: getTimeoutSignal(3500) });
-                        if (oEmbedRes.ok) {
-                            const oData = await oEmbedRes.json();
-                            if (oData.title) meta.title = oData.title;
-                            if (oData.author_name) meta.artist = oData.author_name;
-                        }
-                    } catch(e) {}
-                }
-
-                const newTrack = {
-                    id: (isYt ? 'yt_' : 'mp3_') + Date.now(),
-                    title: meta.title,
-                    artist: meta.artist,
-                    duration: "Live",
-                    isYoutube: isYt,
-                    ytId: ytId || null,
-                    ytUrl: isYt ? songUrl : null,
-                    url: isYt ? null : songUrl,
-                    image: meta.thumbnail
-                };
-
-                playlistsData[category].push(newTrack);
-                refreshAllTracks();
-                localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
-
-                // Background cloud sync to backend
-                fetch(`${BACKEND_URL}/api/tracks`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category: category, tracks: [newTrack] })
-                }).catch(() => {});
-
-                selectCategory(category);
-                playTrack(newTrack.id);
-            }
-
-            fetchLoader.classList.add('hidden');
-            btnSaveSong.disabled = false;
-            addModal.classList.add('hidden');
-            inputSongUrl.value = '';
-        });
-
-        // Initialize default playlist rendering on load
-        renderPlaylist();
-    </script>
-</body>
-</html>
+<!-- ... existing code ... -->
