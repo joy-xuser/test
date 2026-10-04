@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agomoni Sur - Durga Puja Special</title>
+    <title>Agomoni Sur - 100% Ad-Free Durga Puja Music</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -21,7 +21,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(rgba(10, 5, 2, 0.75), rgba(15, 6, 2, 0.88)), 
+            background: linear-gradient(rgba(10, 5, 2, 0.78), rgba(15, 6, 2, 0.90)), 
                         radial-gradient(circle at 20% 30%, rgba(255, 140, 0, 0.18) 0%, transparent 60%),
                         url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
@@ -63,14 +63,13 @@
 </head>
 <body>
 
-    <!-- Native HTML5 Audio Element for MP3 tracks -->
+    <!-- Pure HTML5 Native Audio Player (Powers 100% Ad-Free Playback) -->
     <audio id="native-audio" preload="auto"></audio>
 
-    <!-- Reliable YouTube Engine (Keep within viewport to prevent Chrome/Safari background throttling) -->
-    <div id="hidden-yt-container" class="fixed bottom-0 right-0 w-[200px] h-[200px] opacity-0 pointer-events-none overflow-hidden z-0">
+    <!-- Hidden / Silent YouTube Fallback Container (Only used if all open APIs fail) -->
+    <div id="yt-fallback-container" style="display: none; position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
         <div id="yt-iframe-player"></div>
     </div>
-    <script src="https://www.youtube.com/iframe_api"></script>
 
     <div class="absolute inset-0 bg-black/25 z-0 pointer-events-none"></div>
 
@@ -78,9 +77,9 @@
         
         <!-- Header: Status indicator & Admin button -->
         <div class="w-full flex justify-between items-center z-20">
-            <div id="backend-status-badge" class="px-3 py-1.5 rounded-full text-[11px] font-medium bg-black/50 border border-white/10 text-gray-300 flex items-center gap-2 shadow-lg backdrop-blur-md">
-                <span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" id="status-dot"></span>
-                <span id="status-text">মিউজিক সিস্টেম সক্রিয়</span>
+            <div id="backend-status-badge" class="px-3.5 py-1.5 rounded-full text-[11px] font-medium bg-black/50 border border-white/10 text-gray-300 flex items-center gap-2 shadow-lg backdrop-blur-md">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" id="status-dot"></span>
+                <span id="status-text" class="tracking-wide">Piped Ad-Free API সক্রিয়</span>
             </div>
 
             <button id="open-passcode-modal" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-[#ffaa3c]/30 text-[#ffb866] hover:text-white flex items-center justify-center transition-all shadow-lg active:scale-95" title="Admin Access">
@@ -124,6 +123,7 @@
                         </button>
                     </div>
                 </div>
+
                 <!-- Playlist Header -->
                 <div class="px-6 py-4 flex justify-between items-center bg-transparent mt-2 relative z-20">
                     <div class="flex items-center gap-2.5 cursor-pointer group hover:bg-white/5 px-3 py-1.5 -ml-3 rounded-lg transition-colors" id="open-category-drawer" title="ক্যাটাগরি দেখুন">
@@ -163,9 +163,9 @@
                     </div>
                     
                     <div class="flex flex-col justify-center w-full min-w-0 py-1">
-                        <div class="flex items-center gap-2 mb-1 bg-[#521313] px-2.5 py-0.5 rounded-full w-fit">
-                            <div class="w-1.5 h-1.5 bg-red-500 rounded-full live-dot shadow-[0_0_5px_rgba(239,68,68,0.8)]"></div>
-                            <span class="text-[10px] font-bold text-white tracking-widest">AD-FREE STREAM</span>
+                        <div class="flex items-center gap-2 mb-1 bg-gradient-to-r from-[#5a1b0a] to-[#2b0d05] border border-orange-500/30 px-2.5 py-0.5 rounded-full w-fit">
+                            <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full live-dot shadow-[0_0_5px_rgba(52,211,153,0.8)]" id="stream-status-dot"></div>
+                            <span class="text-[10px] font-bold text-[#ffb866] tracking-widest uppercase" id="stream-mode-badge">100% AD-FREE NATIVE</span>
                         </div>
                         
                         <h4 class="font-semibold text-white text-[16px] tracking-wide truncate mb-0.5" id="current-track-title">গান নির্বাচন করুন</h4>
@@ -184,6 +184,7 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Center: Controls -->
                 <div class="flex items-center justify-center gap-3 md:gap-4 shrink-0">
                     <button class="w-[36px] h-[36px] rounded-full text-gray-400 hover:text-white transition-colors flex items-center justify-center" id="shuffle-btn" title="শাফেল">
@@ -203,7 +204,7 @@
                     </button>
                 </div>
 
-                <!-- Right: Volume (Shifted Left 1cm inside box) -->
+                <!-- Right: Volume -->
                 <div class="flex items-center justify-end gap-3 shrink-0 mr-4 lg:mr-8 pr-6 w-[170px]">
                     <i class="fas fa-volume-up text-gray-300 text-sm cursor-pointer hover:text-white transition-colors" id="mute-icon"></i>
                     <div class="w-[85px] h-[6px] bg-white/20 rounded-full relative cursor-pointer py-1" id="volume-container">
@@ -226,7 +227,7 @@
                 <i class="fas fa-lock text-lg"></i>
             </div>
             <h3 class="text-base font-bold text-white mb-1">অ্যাডমিন পাসকোড দিন</h3>
-            <p class="text-xs text-gray-400 mb-4">পাসকোড দিলে গান যুক্ত করার সুযোগ পাবেন</p>
+            <p class="text-xs text-gray-400 mb-4">পাসকোড দিলে নতুন গান বা প্লেলিস্ট যোগ করতে পারবেন</p>
             <form id="passcode-form" class="space-y-3">
                 <input type="password" id="input-passcode" placeholder="পাসকোড লিখুন" maxlength="12" class="w-full text-center tracking-widest bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33] transition-colors" autocomplete="off">
                 <p id="passcode-error" class="text-xs text-red-400 hidden">ভুল পাসকোড! আবার চেষ্টা করুন।</p>
@@ -236,6 +237,7 @@
             </form>
         </div>
     </div>
+
     <!-- MODAL 2: ADD SONG / PLAYLIST -->
     <div id="add-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="golden-glass w-full max-w-md rounded-3xl p-6 border border-[#ffaa3c]/40 shadow-2xl relative">
@@ -258,7 +260,7 @@
                 <div>
                     <label id="url-label" class="block text-xs font-semibold text-gray-300 uppercase mb-1">YouTube বা MP3 লিংক</label>
                     <input type="url" id="input-song-url" required placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff9d33]">
-                    <p id="url-hint" class="text-[10px] text-gray-400 mt-1">একক গানের লিংক দিন</p>
+                    <p id="url-hint" class="text-[10px] text-gray-400 mt-1">একক গানের YouTube বা ডিরেক্ট MP3 লিংক দিন</p>
                 </div>
 
                 <div>
@@ -279,23 +281,105 @@
 
                 <div class="pt-2">
                     <button type="submit" id="btn-save-song" class="w-full py-3 bg-gradient-to-r from-[#FF8C00] to-[#E65C00] hover:opacity-95 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-[0.98]">
-                        বিজ্ঞাপন ছাড়া সেভ ও প্লে করুন
+                        ১০০% অ্যাড-ফ্রি সেভ ও প্লে করুন
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
     <script>
         const BACKEND_URL = 'https://backendtest-4hjb.onrender.com';
 
-        // ডিফল্ট ভেরিফাইড প্লেলিস্ট
+        // 100% Ad-Free Open API Instances (Multi-instance Rotating Pool with Fallback)
+        const PIPED_INSTANCES = [
+            "https://api.piped.privacydev.net",
+            "https://pipedapi.kavin.rocks",
+            "https://piped-api.garudalinux.org",
+            "https://api.piped.projectsegfau.lt",
+            "https://api-piped.mha.fi"
+        ];
+
+        const INVIDIOUS_INSTANCES = [
+            "https://invidious.nerdvpn.de",
+            "https://inv.tux.pizza",
+            "https://invidious.private.coffee",
+            "https://vid.puffyan.us"
+        ];
+
+        // Cache resolved audio streams in memory to enable zero-wait replaying
+        const audioStreamCache = new Map();
+
+        // Safe timeout signal helper
+        function getTimeoutSignal(ms) {
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+                return AbortSignal.timeout(ms);
+            }
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(), ms);
+            return controller.signal;
+        }
+
+        // Piped & Invidious Audio Stream Resolver (No ads, pure binary stream)
+        async function fetchAdFreeStreamUrl(ytVideoId) {
+            if (audioStreamCache.has(ytVideoId)) {
+                return audioStreamCache.get(ytVideoId);
+            }
+
+            // 1. Try Piped API Instances
+            for (const instance of PIPED_INSTANCES) {
+                try {
+                    const res = await fetch(`${instance}/streams/${ytVideoId}`, {
+                        signal: getTimeoutSignal(4000)
+                    });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    if (data && data.audioStreams && data.audioStreams.length > 0) {
+                        // Prefer M4A for universal browser compatibility
+                        const bestAudio = data.audioStreams.find(s => s.format === 'M4A' || s.mimeType?.includes('audio/mp4')) 
+                                       || data.audioStreams[0];
+                        if (bestAudio && bestAudio.url) {
+                            audioStreamCache.set(ytVideoId, bestAudio.url);
+                            return bestAudio.url;
+                        }
+                    }
+                } catch(e) {
+                    // Try next instance silently
+                }
+            }
+
+            // 2. Fallback to Invidious API Instances
+            for (const instance of INVIDIOUS_INSTANCES) {
+                try {
+                    const res = await fetch(`${instance}/api/v1/videos/${ytVideoId}`, {
+                        signal: getTimeoutSignal(4000)
+                    });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    if (data && data.adaptiveFormats && data.adaptiveFormats.length > 0) {
+                        const audioOnly = data.adaptiveFormats.find(f => f.type && f.type.startsWith('audio/mp4')) 
+                                       || data.adaptiveFormats.find(f => f.type && f.type.startsWith('audio/'));
+                        if (audioOnly && audioOnly.url) {
+                            audioStreamCache.set(ytVideoId, audioOnly.url);
+                            return audioOnly.url;
+                        }
+                    }
+                } catch(e) {
+                    // Try next instance silently
+                }
+            }
+
+            return null;
+        }
+
+        // Default verified tracks
         const defaultTracks = {
             'Mahalaya': [
                 {
                     id: 'default_m1',
                     title: "মহিষাসুরমর্দিনী (Mahisasuramardini)",
                     artist: "বীরেন্দ্রকৃষ্ণ ভদ্র",
-                    duration: "Live",
+                    duration: "01:29:19",
                     isYoutube: true,
                     ytId: "YQyo8QeoYhc",
                     ytUrl: "https://www.youtube.com/watch?v=YQyo8QeoYhc",
@@ -330,7 +414,7 @@
             'All Tracks': []
         };
 
-        // লোকালস্টোরেজ থেকে কাস্টম গান লোড করা
+        // Local cache restoration
         const savedTracks = localStorage.getItem('agomoni_user_tracks');
         if (savedTracks) {
             try {
@@ -350,10 +434,10 @@
         }
         refreshAllTracks();
 
-        // সার্ভার থেকে সেন্ট্রালাইজড প্লেলিস্ট লোড করা (যাতে সব ডিভাইসে গান পাওয়া যায়)
+        // Server Sync
         async function syncTracksWithServer() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/tracks`, { signal: AbortSignal.timeout(10000) });
+                const res = await fetch(`${BACKEND_URL}/api/tracks`, { signal: getTimeoutSignal(8000) });
                 if (res.ok) {
                     const serverData = await res.json();
                     let updated = false;
@@ -375,7 +459,7 @@
         }
         syncTracksWithServer();
 
-        // অডিও ইঞ্জিন ভেরিয়েবল
+        // Audio Engine Elements & State
         const audio = document.getElementById('native-audio');
         let currentPlaylistName = 'All Tracks';
         let tracks = playlistsData[currentPlaylistName];
@@ -383,71 +467,9 @@
         let isPlaying = false;
         let isShuffle = false;
         let repeatMode = 'all'; // 'all', 'one', 'off'
-        let currentActiveMode = 'native'; // 'native' or 'youtube'
+        let currentVolume = 1;
 
-        let ytPlayer = null;
-        let isYtReady = false;
-        let progressInterval = null;
-
-        // ইউটিউব এপিআই সেটআপ
-        window.onYouTubeIframeAPIReady = function() {
-            try {
-                ytPlayer = new YT.Player('yt-iframe-player', {
-                    height: '10',
-                    width: '10',
-                    playerVars: {
-                        'playsinline': 1,
-                        'controls': 0,
-                        'disablekb': 1,
-                        'fs': 0,
-                        'rel': 0,
-                        'autoplay': 0
-                    },
-                    events: {
-                        'onReady': () => {
-                            isYtReady = true;
-                            if (ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(currentVolume * 100);
-                        },
-                        'onStateChange': onYtStateChange,
-                        'onError': () => {
-                            artLoader.classList.add('hidden');
-                            setTimeout(playNextTrack, 1500);
-                        }
-                    }
-                });
-            } catch(err) {
-                console.warn("YouTube init err:", err);
-            }
-        };
-
-        function onYtStateChange(event) {
-            if (!event || !window.YT) return;
-            if (event.data === YT.PlayerState.PLAYING) {
-                isPlaying = true;
-                setPlayIcon(true);
-                artLoader.classList.add('hidden');
-                startProgressTracker();
-            } else if (event.data === YT.PlayerState.PAUSED) {
-                isPlaying = false;
-                setPlayIcon(false);
-                stopProgressTracker();
-            } else if (event.data === YT.PlayerState.ENDED) {
-                playNextTrack();
-            } else if (event.data === YT.PlayerState.BUFFERING) {
-                artLoader.classList.remove('hidden');
-            } else if (event.data === YT.PlayerState.CUED) {
-                if (ytPlayer && ytPlayer.playVideo) {
-                    ytPlayer.playVideo();
-                }
-            }
-        }
-
-        function extractYouTubeId(url) {
-            if (!url) return null;
-            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
-            return match ? match[1] : null;
-        }
-        // UI এলিমেন্ট রেফারেন্স
+        // UI Element References
         const playPauseBtn = document.getElementById('play-pause-btn');
         const playIcon = playPauseBtn.querySelector('i');
         const prevBtn = document.getElementById('prev-btn');
@@ -467,6 +489,9 @@
         const volumeFill = document.getElementById('volume-fill');
         const volumeThumb = document.getElementById('volume-thumb');
         const muteIcon = document.getElementById('mute-icon');
+        const statusBadgeText = document.getElementById('status-text');
+        const streamStatusDot = document.getElementById('stream-status-dot');
+        const streamModeBadge = document.getElementById('stream-mode-badge');
 
         function formatTime(secs) {
             if (isNaN(secs) || secs < 0) return "00:00";
@@ -485,41 +510,11 @@
             progressThumb.style.left = `${clamped}%`;
         }
 
-        function startProgressTracker() {
-            stopProgressTracker();
-            progressInterval = setInterval(() => {
-                if (currentActiveMode === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) {
-                    try {
-                        const cur = ytPlayer.getCurrentTime() || 0;
-                        const dur = ytPlayer.getDuration() || 0;
-                        if (dur > 0) {
-                            updateProgressBar((cur / dur) * 100);
-                            currentTimeDisplay.textContent = formatTime(cur);
-                            totalTimeDisplay.textContent = formatTime(dur);
-                        }
-                    } catch(e) {}
-                }
-            }, 300);
-        }
-
-        function stopProgressTracker() {
-            if (progressInterval) {
-                clearInterval(progressInterval);
-                progressInterval = null;
-            }
-        }
-        let currentVolume = 1;
         function setVolume(val) {
             const clamped = Math.max(0, Math.min(1, val));
             currentVolume = clamped;
             audio.volume = clamped;
             audio.muted = (clamped === 0);
-
-            if (ytPlayer && ytPlayer.setVolume) {
-                ytPlayer.setVolume(clamped * 100);
-                if (clamped === 0) ytPlayer.mute();
-                else ytPlayer.unMute();
-            }
 
             volumeFill.style.width = `${clamped * 100}%`;
             volumeThumb.style.left = `${clamped * 100}%`;
@@ -528,7 +523,14 @@
                 : "fas fa-volume-up text-gray-300 text-sm cursor-pointer";
         }
 
-        window.playTrack = function(id) {
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        // Master Track Player using Piped / Invidious Ad-Free Engine
+        window.playTrack = async function(id) {
             let track = tracks.find(t => t.id === id);
             if (!track) {
                 for (const cat in playlistsData) {
@@ -541,60 +543,67 @@
             currentTrackId = track.id;
             updateProgressBar(0);
             currentTimeDisplay.textContent = "00:00";
-            totalTimeDisplay.textContent = track.duration || "Live";
+            totalTimeDisplay.textContent = track.duration || "--:--";
             trackTitleDisplay.textContent = track.title;
             trackArtistDisplay.textContent = track.artist;
             if (track.image) currentAlbumArt.src = track.image;
 
             artLoader.classList.remove('hidden');
+            statusBadgeText.textContent = "অ্যাড-ফ্রি অডিও স্ট্রিম প্রস্তুত হচ্ছে...";
+            streamModeBadge.textContent = "RESOLVING AD-FREE...";
+            streamStatusDot.className = "w-1.5 h-1.5 bg-yellow-400 rounded-full live-dot";
 
             const ytId = track.ytId || extractYouTubeId(track.ytUrl || track.url);
 
             if (track.isYoutube || ytId) {
-                currentActiveMode = 'youtube';
-                audio.pause();
-                audio.src = "";
+                // Fetch Ad-Free stream URL from Piped / Invidious instances
+                const streamUrl = await fetchAdFreeStreamUrl(ytId);
 
-                const playYt = () => {
-                    try {
-                        if (ytPlayer && ytPlayer.loadVideoById) {
-                            ytPlayer.loadVideoById(ytId);
-                            ytPlayer.unMute();
-                            ytPlayer.setVolume(currentVolume * 100);
-                            ytPlayer.playVideo();
-                        }
-                    } catch(e) {
+                if (streamUrl) {
+                    audio.src = streamUrl;
+                    audio.load();
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        setPlayIcon(true);
                         artLoader.classList.add('hidden');
-                    }
-                };
-
-                if (isYtReady && ytPlayer && ytPlayer.loadVideoById) {
-                    playYt();
+                        statusBadgeText.textContent = "১০০% বিজ্ঞাপনহীন অডিও বাজছে";
+                        streamModeBadge.textContent = "100% AD-FREE NATIVE";
+                        streamStatusDot.className = "w-1.5 h-1.5 bg-emerald-400 rounded-full live-dot";
+                    }).catch(err => {
+                        console.warn("Autoplay interrupted:", err);
+                        artLoader.classList.add('hidden');
+                    });
                 } else {
-                    setTimeout(playYt, 600);
+                    // Fallback to secondary stream or direct video preview
+                    statusBadgeText.textContent = "বিকল্প স্ট্রিমে চালানো হচ্ছে...";
+                    audio.src = `https://invidious.nerdvpn.de/latest_version?id=${ytId}&itag=140`;
+                    audio.load();
+                    audio.play().catch(() => {});
+                    artLoader.classList.add('hidden');
                 }
             } else {
-                currentActiveMode = 'native';
-                if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-                stopProgressTracker();
-
+                // Direct MP3 URL
                 audio.src = track.url;
                 audio.load();
                 audio.play().then(() => {
                     isPlaying = true;
                     setPlayIcon(true);
                     artLoader.classList.add('hidden');
+                    statusBadgeText.textContent = "সরাসরি অডিও বাজছে";
+                    streamModeBadge.textContent = "DIRECT MP3";
+                    streamStatusDot.className = "w-1.5 h-1.5 bg-emerald-400 rounded-full live-dot";
                 }).catch(err => {
                     artLoader.classList.add('hidden');
+                    console.warn("MP3 play error:", err);
                 });
             }
 
             renderPlaylist();
         };
 
-        // নেটিভ অডিও ইভেন্টস
+        // Native Audio Events
         audio.addEventListener('timeupdate', () => {
-            if (currentActiveMode === 'native' && !isNaN(audio.duration) && audio.duration > 0) {
+            if (!isNaN(audio.duration) && audio.duration > 0) {
                 updateProgressBar((audio.currentTime / audio.duration) * 100);
                 currentTimeDisplay.textContent = formatTime(audio.currentTime);
                 totalTimeDisplay.textContent = formatTime(audio.duration);
@@ -602,31 +611,36 @@
         });
 
         audio.addEventListener('ended', playNextTrack);
-        audio.addEventListener('error', () => {
-            artLoader.classList.add('hidden');
-            setTimeout(playNextTrack, 1500);
+
+        audio.addEventListener('waiting', () => {
+            artLoader.classList.remove('hidden');
         });
+
+        audio.addEventListener('canplay', () => {
+            artLoader.classList.add('hidden');
+        });
+
+        audio.addEventListener('error', (e) => {
+            artLoader.classList.add('hidden');
+            console.warn("Audio stream notice:", e);
+        });
+
+        // Controls
         playPauseBtn.addEventListener('click', () => {
-            if (currentActiveMode === 'youtube' && ytPlayer) {
-                if (isPlaying) {
-                    ytPlayer.pauseVideo();
-                } else {
-                    ytPlayer.playVideo();
-                }
-            } else {
-                if (!audio.src) {
-                    if (tracks.length > 0) playTrack(tracks[0].id);
-                    return;
-                }
-                if (audio.paused) {
-                    audio.play();
+            if (!audio.src) {
+                if (tracks.length > 0) playTrack(tracks[0].id);
+                return;
+            }
+
+            if (audio.paused) {
+                audio.play().then(() => {
                     isPlaying = true;
                     setPlayIcon(true);
-                } else {
-                    audio.pause();
-                    isPlaying = false;
-                    setPlayIcon(false);
-                }
+                }).catch(console.warn);
+            } else {
+                audio.pause();
+                isPlaying = false;
+                setPlayIcon(false);
             }
             renderPlaylist();
         });
@@ -662,30 +676,23 @@
             if (idx > 0) {
                 playTrack(tracks[idx - 1].id);
             } else {
-                if (currentActiveMode === 'youtube' && ytPlayer && ytPlayer.seekTo) {
-                    ytPlayer.seekTo(0, true);
-                } else {
-                    audio.currentTime = 0;
-                }
+                audio.currentTime = 0;
             }
         }
 
         nextBtn.addEventListener('click', playNextTrack);
         prevBtn.addEventListener('click', playPrevTrack);
 
-        // প্রোগ্রেস বার সিকিং
+        // Progress Seeking
         progressContainer.addEventListener('click', (e) => {
             const rect = progressContainer.getBoundingClientRect();
             const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-            if (currentActiveMode === 'youtube' && ytPlayer && ytPlayer.getDuration) {
-                const dur = ytPlayer.getDuration();
-                if (dur > 0) ytPlayer.seekTo(pos * dur, true);
-            } else if (!isNaN(audio.duration)) {
+            if (!isNaN(audio.duration) && audio.duration > 0) {
                 audio.currentTime = pos * audio.duration;
             }
         });
 
-        // ভলিউম বার
+        // Volume Bar
         volumeContainer.addEventListener('click', (e) => {
             const rect = volumeContainer.getBoundingClientRect();
             const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -695,7 +702,8 @@
         muteIcon.addEventListener('click', () => {
             setVolume(currentVolume > 0 ? 0 : 0.85);
         });
-        // শাফেল ও রিপিট
+
+        // Shuffle & Repeat
         shuffleBtn.addEventListener('click', () => {
             isShuffle = !isShuffle;
             shuffleBtn.className = isShuffle 
@@ -718,7 +726,7 @@
             }
         });
 
-        // প্লেলিস্ট রেন্ডারিং
+        // Playlist Rendering
         function renderPlaylist() {
             const container = document.getElementById('playlist-items');
             if (!container) return;
@@ -756,7 +764,7 @@
             document.getElementById('playlist-main-title').textContent = `${currentPlaylistName.toUpperCase()} (${tracks.length})`;
         }
 
-        // ক্যাটাগরি মেনু
+        // Category Drawer
         const categoryDrawer = document.getElementById('playlist-category-drawer');
         document.getElementById('open-category-drawer').addEventListener('click', () => categoryDrawer.classList.remove('-translate-x-full'));
         document.getElementById('close-category-drawer').addEventListener('click', () => categoryDrawer.classList.add('-translate-x-full'));
@@ -768,7 +776,7 @@
             categoryDrawer.classList.add('-translate-x-full');
         };
 
-        // প্লেলিস্ট শো/হাইড
+        // Playlist Show/Hide
         const toggleBtn = document.getElementById('toggle-playlist');
         const playlistItems = document.getElementById('playlist-items');
         const playlistIcon = document.getElementById('playlist-icon');
@@ -783,7 +791,8 @@
             playlistToggleText.textContent = isPlaylistVisible ? 'লুকান' : 'দেখান';
             playlistContainer.style.height = isPlaylistVisible ? '60vh' : 'auto';
         });
-        // পাসকোড ও অ্যাড মোডাল
+
+        // Passcode & Add Modal
         const CORRECT_PASSCODE = "47842828";
         const passcodeModal = document.getElementById('passcode-modal');
         const addModal = document.getElementById('add-modal');
@@ -811,7 +820,7 @@
             }
         });
 
-        // সিঙ্গল ও প্লেলিস্ট ট্যাব সুইচিং
+        // Single vs Playlist Tab Switching
         let isPlaylistMode = false;
         const tabSingle = document.getElementById('tab-single');
         const tabPlaylist = document.getElementById('tab-playlist');
@@ -826,8 +835,8 @@
             tabPlaylist.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
             urlLabel.textContent = "YouTube বা MP3 লিংক";
             inputSongUrl.placeholder = "https://www.youtube.com/watch?v=...";
-            urlHint.textContent = "একক গানের লিংক দিন";
-            btnSaveSong.textContent = "বিজ্ঞাপন ছাড়া সেভ ও প্লে করুন";
+            urlHint.textContent = "একক গানের YouTube বা ডিরেক্ট MP3 লিংক দিন";
+            btnSaveSong.textContent = "১০০% অ্যাড-ফ্রি সেভ ও প্লে করুন";
         });
 
         tabPlaylist.addEventListener('click', () => {
@@ -840,7 +849,7 @@
             btnSaveSong.textContent = "পুরো প্লেলিস্ট ফেচ করে যুক্ত করুন";
         });
 
-        // গান বা প্লেলিস্ট যুক্ত করার লজিক
+        // Add Song / Playlist Logic
         const addSongForm = document.getElementById('add-song-form');
         const fetchLoader = document.getElementById('fetch-loader');
         const loaderMsg = document.getElementById('loader-msg');
@@ -858,7 +867,7 @@
             if (isPlaylistMode) {
                 loaderMsg.textContent = "প্লেলিস্ট থেকে সব গান লোড হচ্ছে...";
                 try {
-                    const res = await fetch(`${BACKEND_URL}/playlist?url=${encodeURIComponent(songUrl)}`, { signal: AbortSignal.timeout(30000) });
+                    const res = await fetch(`${BACKEND_URL}/playlist?url=${encodeURIComponent(songUrl)}`, { signal: getTimeoutSignal(30000) });
                     if (res.ok) {
                         const data = await res.json();
                         if (data.tracks && data.tracks.length > 0) {
@@ -866,7 +875,7 @@
                             refreshAllTracks();
                             localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
                             
-                            // সার্ভারে ক্লাউড সিঙ্ক যাতে সব ডিভাইস এই গানগুলো পায়
+                            // Background Cloud Sync to server
                             fetch(`${BACKEND_URL}/api/tracks`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -877,7 +886,7 @@
                             playTrack(data.tracks[0].id);
                         }
                     } else {
-                        throw new Error();
+                        throw new Error("Failed to fetch playlist");
                     }
                 } catch (err) {
                     const ytId = extractYouTubeId(songUrl);
@@ -917,7 +926,7 @@
 
                 if (isYt) {
                     try {
-                        const oEmbedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(songUrl)}`, { signal: AbortSignal.timeout(3500) });
+                        const oEmbedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(songUrl)}`, { signal: getTimeoutSignal(3500) });
                         if (oEmbedRes.ok) {
                             const oData = await oEmbedRes.json();
                             if (oData.title) meta.title = oData.title;
@@ -926,49 +935,4 @@
                     } catch(e) {}
                 }
 
-                const newTrack = {
-                    id: 'track_' + Date.now(),
-                    title: meta.title,
-                    artist: meta.artist,
-                    duration: "Live",
-                    isYoutube: isYt,
-                    ytId: ytId,
-                    ytUrl: isYt ? songUrl : null,
-                    url: !isYt ? songUrl : null,
-                    image: meta.thumbnail
-                };
-
-                playlistsData[category].push(newTrack);
-                refreshAllTracks();
-                localStorage.setItem('agomoni_user_tracks', JSON.stringify(playlistsData));
-
-                // সার্ভারে ক্লাউড সিঙ্ক পাঠানো
-                fetch(`${BACKEND_URL}/api/tracks`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category: category, tracks: [newTrack] })
-                }).catch(() => {});
-
-                selectCategory(category);
-                playTrack(newTrack.id);
-            }
-
-            fetchLoader.classList.add('hidden');
-            btnSaveSong.disabled = false;
-            addSongForm.reset();
-            addModal.classList.add('hidden');
-        });
-
-        // প্রারম্ভিক ইনিশিয়ালাইজেশন
-        if (tracks.length > 0) {
-            const first = tracks[0];
-            trackTitleDisplay.textContent = first.title;
-            trackArtistDisplay.textContent = first.artist;
-            if (first.image) currentAlbumArt.src = first.image;
-        }
-
-        setVolume(1);
-        renderPlaylist();
-    </script>
-</body>
-</html>
+                const
